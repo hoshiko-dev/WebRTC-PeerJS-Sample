@@ -1,0 +1,26 @@
+.pt0 {padding-top: 0 !important;}
+.pb0 {padding-buttom: 0 !important;}
+.mt0 {margin-top: 0 !important}
+.mb0 {margin-buttom: 0 !important}
+
+.video-size-minimal {
+  width: 212px; /* todo:custom-size */
+  height: 114px; /* todo:custom-size */
+  padding-left: 9px;
+  padding-right: 9px;
+}
+.video-size-modal {
+  width: 100%;
+}
+
+/* Chat*/
+table#text-chat-table tr td.chat-date {
+  width: 200px;
+}
+table#text-chat-table tr td.chat-name {
+  width: 200px;
+}
+#chat-block-wrap {
+  height: 110px;
+  overflow-y: scroll;
+}
