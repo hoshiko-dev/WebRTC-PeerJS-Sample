@@ -7,15 +7,18 @@ var UserPeerListView = Backbone.View.extend({
     this.render();
     //this.getAllPeers();
     this.listenTo(this.collection,'add',this.addNewList);
+    this.listenTo(this.collection,'get_start_peer',this.getAllPeers);
   },
   events: {
     'click #get-all-peers': 'getAllPeers'
   },
   getAllPeers: function(e) {
-    e.preventDefault();
+    if (e != undefined) {
+      e.preventDefault();
+    }
     // Peer情報を取得
     var callback = this.onGetAllPeers.bind(this);
-    this.model.adapter.getAllPeers(callback);
+    this.model.tracker.getAllPeers(callback);
   },
   onGetAllPeers: function(peerIds) {
     _.each(peerIds,function(peerId){
@@ -27,20 +30,20 @@ var UserPeerListView = Backbone.View.extend({
         }
       });
       if (!isAlready) {
-        var user = new User({peer_id: peerId});
+        var user = new User({'peer_id': peerId,'tracker': this.model.tracker});
         this.collection.add(user);
       }
     },this);
   },
   addNewList: function(user) {
-    var newRecord = new UserRecordView({model: {user: user,adapter: this.model.adapter}});
+    var newRecord = new UserRecordView({model: {'user': user,'tracker': this.model.tracker}});
     this.$el.find('#users-table').append(newRecord.render().el);
     return this;
   },
   render: function() {
     this.$el.find('#users-table tr.user-info').remove();
     this.collection.each(function(user){
-      var newRecord = new UserRecordView({model: {user: user,adapter: this.model.adapter}});
+      var newRecord = new UserRecordView({model: {'user': user,'tracker': this.model.tracker}});
       this.$el.find('#users-table').append(newRecord.render().el);
     },this);
     $('#all-user-list').show();
@@ -65,17 +68,19 @@ var UserRecordView = Backbone.View.extend({
     var isActive = (_.isEmpty(this.model.user.get('src'))? false : true);
     this.$el.children().remove();
     this.$el.append(
-      '<td>' + this.model.user.get('user_name') + '</td>'
-      + '<td>' + this.model.user.get('peer_id') + '</td>'
-      + '<td>' + this.model.user.get('email') + '</td>'
-      + '<td>' +
+      '<td class="text-center">' +
+        (isActive?this.model.user.get('user_name'):'<strong class="text-danger">未接続</strong>')
+      + '</td>'
+      + '<td class="text-center">' + this.model.user.get('peer_id') + '</td>'
+      + '<td class="text-center">' + this.model.user.get('email') + '</td>'
+      + '<td class="text-center">' +
         (isActive?'CONNECTED':'DISCONNECTED')
       + '</td>'
-      + '<td>' +
+      + '<td class="text-center">' +
       (this.model.user.get('is_owner')?"":
         (isActive
-          ?'<a href="#" class="peerDisconnect btn btn-danger" peer-id="' + this.model.user.get('peer_id') + '">切断</a>'
-          : '<a href="#" class="peerConnect btn btn-primary" peer-id="' + this.model.user.get('peer_id') + '">接続</a>'
+          ?'<a href="#" class="peerDisconnect btn btn-danger" peer-id="' + this.model.user.get('peer_id') + '">disconnect</a>'
+          : '<a href="#" class="peerConnect btn btn-primary" peer-id="' + this.model.user.get('peer_id') + '">connect</a>'
         )
       )
       + '</td>'
@@ -84,13 +89,18 @@ var UserRecordView = Backbone.View.extend({
   },
   connectPeer: function(e) {
     e.preventDefault();
-    this.model.adapter.createMedia(this.model.user);
-    // データ通信用接続も同時に行う
-    this.model.adapter.createData(this.model.user);
+    let yieldObj = this.model.tracker.connectPeer(this.model.user);
+    this.model.tracker.set('yield_obj',yieldObj);
+    //console.log(yieldObj);
+    try {
+      yieldObj.next();
+    } catch(e) {
+      console.log(e);
+      return;
+    }
   },
   disconnectPeer: function(e) {
     e.preventDefault();
-    this.model.adapter.closeData(this.model.user);
-    this.model.adapter.closeMedia(this.model.user);
+    this.model.tracker.disconnectPeer(this.model.user);
   }
 });

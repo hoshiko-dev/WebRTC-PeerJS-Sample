@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/samples.css">
   </head>
   <body>
@@ -103,11 +104,11 @@
                     <a href="#" class="btn btn-info" id="get-all-peers">Get Peer</a>
                     <table id="users-table" class="table table-bordered table-hover table-striped">
                       <tr>
-                        <th>Name</th>
-                        <th>peer id</th>
-                        <th>email</th>
-                        <th>status</th>
-                        <th>action</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">peer id</th>
+                        <th class="text-center">email</th>
+                        <th class="text-center">status</th>
+                        <th class="text-center">action</th>
                       </tr>
                     </table>
                   </div>
@@ -123,14 +124,24 @@
       <div class="modal-dialog  modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">閉じる</span></button>
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">close</span></button>
             <h3 class="modal-title" id="modal-video-title"></h3>
           </div>
           <div class="modal-body">
-            <video id="modal-video-view" autoplay class="video-size-modal" ></video>
+            <video id="modal-video-view" autoplay controls class="video-size-modal" ></video>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+            <div class="row">
+              <div class="col-sm-2">
+                <button class="btn btn-default btn-block modal-video-fullscreen"><i class="fa fa-expand"></i></button>
+              </div>
+              <div class="col-sm-2">
+                <button class="btn btn-info btn-block modal-video-mute"><i class="fa fa-microphone"></i></button>
+              </div>
+              <div class="col-sm-offset-6 col-sm-2">
+                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+              </div>
+            </div>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
@@ -144,6 +155,7 @@
     <script src="js/lib/libMediaStream.js"></script>
     <script src="js/rtc-user.js"></script>
     <script src="js/rtc-adapter.js"></script>
+    <script src="js/rtc-tracker.js"></script>
     <script src="js/rtc-textchat.js"></script>
     <script src="js/rtc-video.js"></script>
     <script src="js/rtc-list.js"></script>

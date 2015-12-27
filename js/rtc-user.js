@@ -18,20 +18,22 @@ var User = Backbone.Model.extend({
     is_owner: false,
     camera_devices: [],
     camera_id: '',
-    size_id: '',
-    rate_id: ''
+    size_id: '1',
+    rate_id: '1',
+    connect_yeild: null,
+    disconnect_yeild: null
   },
   url: '#', // dummy
   initialize: function (args) {
     //super
+    this.tracker = args.tracker;
+
     this.on('invalid', function(model, error){
       $("#error").html(error);
     });
     // カメラデバイスの取得
     if (this.get('is_owner')) {
-      //libMs.getMediaStreams(this.setVideDevice.bind(this));
       WebRtcAdapter.getMediaStream().getMediaStreams(this.setVideDevice.bind(this));
-
     }
   },
   validate: function(attrs) {
@@ -51,13 +53,27 @@ var User = Backbone.Model.extend({
       }
     }
   },
-  onStream: function(stream) {
-    console.log('onStream');
+  onYourStream: function(yeildObj,stream) {
+    console.log('onYourStream',yeildObj,stream);
     // 対向ノードからのビデオチャット接続完了通知を受信
     var src = URL.createObjectURL(stream);
     if (src) {
       this.set('stream',stream);
       this.set('src',src);
+      this.trigger('add_video_tag',this);
+    }
+    // Trackerを動かす
+    this.nextYield(yeildObj);
+  },
+  onStream: function(stream) {
+    console.log('onStream',stream);
+    // 対向ノードからのビデオチャット接続完了通知を受信
+    var src = URL.createObjectURL(stream);
+    if (src) {
+      this.set('stream',stream);
+      this.set('src',src);
+      // videoタグ作成
+      this.trigger('add_video_tag',this);
     }
   },
   onMediaClose: function() {
@@ -71,11 +87,17 @@ var User = Backbone.Model.extend({
   onMediaError: function(err) {
     console.log('onMediaError');
   },
+  onYourDataOpen: function(yeildObj) {
+    // コネクションが利用可能となった
+    console.log('onYourDataOpen',yeildObj);
+    // Trackerを動かす
+    this.nextYield(yeildObj);
+  },
   onDataOpen: function() {
     // コネクションが利用可能となった
     console.log('onDataOpen');
-    // 初回のプロフィール送信を実施
-    this.trigger('send_profile',this);
+    console.log(this.tracker);
+    this.tracker.sendProfile(this);
   },
   onDataClose: function() {
     // データコネクション切断
@@ -109,6 +131,14 @@ var User = Backbone.Model.extend({
       }
     }
   },
+  nextYield: function(obj) {
+    try {
+      obj.next()
+    } catch(e) {
+      console.log('yiled Error:',e);
+      if (! (e instanceof StopIteration)) throw e;
+    }
+  }
 });
 
 var UserCollection = Backbone.Collection.extend({
@@ -165,11 +195,9 @@ var UserInfoView = Backbone.View.extend({
       );
     }
     // 画面サイズ
-    console.log('$$$$',this.model.get('size_id'));
     $('#videoSize').children().remove();
     let sizes = this.config.get('video_sizes');
     for (let index in sizes) {
-      console.log('----',sizes[index]['id']);
       $('#videoSize').append(
         '<option value="' + sizes[index]['id'] + '"' + ((this.model.get('size_id') == sizes[index]['id'])?' selected ':'') + '>'+ sizes[index]['label'] + '</option>'
       );

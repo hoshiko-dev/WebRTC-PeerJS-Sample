@@ -3,13 +3,19 @@
 // peerjsのAdapterクラス
 var WebRtcAdapter = Backbone.Model.extend({
   defaults: {
-    config: null
+    config: null,
+    width: '',
+    height: '',
+    maxFrame: '',
+    minFrame: '',
   },
+  self: WebRtcAdapter,
   initialize: function (args) {
     //super
 
     this.config = args.config;
     this.you = args.you;
+    this.tracker = args.tracker;
 
     this.on('invalid', function(model, error){
       //$("#error").html(error);
@@ -17,63 +23,41 @@ var WebRtcAdapter = Backbone.Model.extend({
   },
   validate: function(attrs) {
   },
-  startRtc: function() {
+  startRtc: function(yieldObj) {
     console.log('startRTC');
     // WebRTC起動
     //　自分のカメラ接続を開始
     var callbacks = {
-      'init': this.onYourCamera.bind(this)
+      'init': this.onYourCamera.bind(this,yieldObj)
     };
-    var width = this.config.get('width');
-    var height = this.config.get('height');
-    var sizes = this.config.get('video_sizes');
-    var rates = this.config.get('frame_rates');
-    for (let size in sizes) {
-    console.log('KKK',size,this.you.get('size_id'));
-      if (sizes[size]['id'] == this.you.get('size_id')) {
-        console.log('HOGE');
-        width = sizes[size]['width'];
-        height =  sizes[size]['height'];
-        break;
-      }
-    }
-    console.log('hoge',width,height);
-    let maxFrame = this.config.get('maxFrameRate');
-    let minFrame = this.config.get('minFrameRate');
-    for(let rate in rates) {
-      if (rates[rate]['id'] == this.you.get('rate_id')) {
-        maxFrame = rates[rate]['max'];
-        minFrame = rates[rate]['min'];
-        break;
-      }
-    }
-    console.log('hoge',width,height,maxFrame,minFrame);
-    librtc.initYourCamera(
-      width,
-      height,
-      maxFrame,
-      minFrame,
+    this.setUpMediaParams();
+    this.getLibRtc().initYourCamera(
+      this.width,
+      this.height,
+      this.maxFrame,
+      this.minFrame,
       this.you.get('camera_id'),
       callbacks);
   },
   stopRtc: function() {
     // Peerの強制切断で一括削除
-    librtc.destroy();
+    this.getLibRtc().destroy();
   },
-  onYourCamera: function(yourStream) {
+  onYourCamera: function(yieldObj,yourStream) {
     console.log('onYourCamera');
     // 自身のカメラをvideoタグにセット
     var src = URL.createObjectURL(yourStream);
     if (src) {
       this.you.set('stream',yourStream);
       this.you.set('src',src);
-      this.createYourPeer();
+      //this.createYourPeer();
     }
+    yieldObj.next();
   },
-  createYourPeer: function() {
+  createYourPeer: function(yieldObj) {
     console.log('createYourPeer');
     // PeerJSの接続開始
-    librtc.createYourPeer(
+    this.getLibRtc().createYourPeer(
       this.config.get('rtcHost'),
       this.config.get('rtcPort'),
       this.config.get('key'),
@@ -84,97 +68,98 @@ var WebRtcAdapter = Backbone.Model.extend({
       this.config.get('id')
     );
     var callbacks = {
-      'open': this.onPeerOpen.bind(this),
+      'open': this.onPeerOpen.bind(this,yieldObj),
       'call': this.onCall.bind(this),
       'connection': this.onConnection.bind(this),
       'close': this.onPeerClose.bind(this),
       'disconnected': this.onDisconnected.bind(this),
       'error': this.onPeerError.bind(this),
     };
-    librtc.setPeerEvent(callbacks);
+    this.getLibRtc().setPeerEvent(callbacks);
   },
-  createMedia: function(targetModel) {
-    console.log('createMedia');
+  createMedia: function(targetUser,yeildObj) {
+    console.log('createMedia',yeildObj);
     // ビデオチャット開始（You->other)
-    var targetMedia = librtc.createRtcMedia(this.get('peer_id'));
+    var targetMedia = this.getLibRtc().createRtcMedia(targetUser.get('peer_id'));
     if (targetMedia) {
-      // VIDEOタグを追加
-      targetModel.trigger('create_call',targetModel);
-
-      targetModel.set('rtc_media',targetMedia);
+      targetUser.set('rtc_media',targetMedia);
       var callbacks = {
-        'stream': targetModel.onStream.bind(targetModel),
-        'close': targetModel.onMediaClose.bind(targetModel),
-        'error': targetModel.onMediaError.bind(targetModel),
+        'stream': targetUser.onYourStream.bind(targetUser,yeildObj),
+        'close': targetUser.onMediaClose.bind(targetUser),
+        'error': targetUser.onMediaError.bind(targetUser),
       };
-      librtc.setMediaEvent(targetMedia,callbacks);
+      this.getLibRtc().setMediaEvent(targetMedia,callbacks);
     }
   },
-  closeMedia: function(targetModel) {
+  closeMedia: function(targetUser) {
     // ビデオチャット切断
-    librtc.closeMedia(targetModel.get('rtc_media'));
+    this.getLibRtc().closeMedia(targetUser.get('rtc_media'));
   },
-  setMediaEvent: function(targetModel) {
+  setMediaEvent: function(targetUser) {
     // ビデオチャットイベントセット(Other->Youの場合)
     var callbacks = {
-      'stream': targetModel.onStream.bind(targetModel),
-      'close': targetModel.onMediaClose.bind(targetModel),
-      'error': targetModel.onMediaError.bind(targetModel),
+      'stream': targetUser.onStream.bind(targetUser),
+      'close': targetUser.onMediaClose.bind(targetUser),
+      'error': targetUser.onMediaError.bind(targetUser),
     };
-    librtc.setMediaEvent(targetModel.get('rtc_media'),callbacks);
+    this.getLibRtc().setMediaEvent(targetUser.get('rtc_media'),callbacks);
   },
-  createData: function(targetModel) {
-    var targetData = librtc.createRtcData(targetModel.get('peer_id'));
+  createData: function(targetUser,yeildObj) {
+    var targetData = this.getLibRtc().createRtcData(targetUser.get('peer_id'));
     if (targetData) {
-      targetModel.set('rtc_data',targetData);
+      targetUser.set('rtc_data',targetData);
+      console.log('createData',yeildObj);
       var callbacks = {
-        'data': targetModel.onDataRecieve.bind(targetModel),
-        'open': targetModel.onDataOpen.bind(targetModel),
-        'close': targetModel.onDataClose.bind(targetModel),
-        'error': targetModel.onDataError.bind(targetModel),
+        'data': targetUser.onDataRecieve.bind(targetUser),
+        'open': targetUser.onYourDataOpen.bind(targetUser,yeildObj),
+        'close': targetUser.onDataClose.bind(targetUser),
+        'error': targetUser.onDataError.bind(targetUser),
       };
-      librtc.setDataEvent(targetData,callbacks);
+      this.getLibRtc().setDataEvent(targetData,callbacks);
     }
   },
-  closeData: function(targetModel) {
-    librtc.closeData(targetModel.get('rtc_data'));
+  closeData: function(targetUser) {
+    this.getLibRtc().closeData(targetUser.get('rtc_data'));
   },
-  setDataEvent: function(targetModel) {
+  setDataEvent: function(targetUser) {
     // データ送信イベントセット(Other->Youの場合)
     var callbacks = {
-      'data': targetModel.onDataRecieve(targetModel),
-      'open': targetModel.onDataOpen.bind(targetModel),
-      'close': targetModel.onDataClose.bind(targetModel),
-      'error': targetModel.onDataError.bind(targetModel),
+      'data': targetUser.onDataRecieve.bind(targetUser),
+      'open': targetUser.onDataOpen.bind(targetUser),
+      'close': targetUser.onDataClose.bind(targetUser),
+      'error': targetUser.onDataError.bind(targetUser),
     };
-    librtc.setDataEvent(targetModel.get('rtc_data'),callbacks);
+    this.getLibRtc().setDataEvent(targetUser.get('rtc_data'),callbacks);
   },
 
   sendData: function(targetCon,data) {
-    librtc.sendData(targetCon,data);
+    this.getLibRtc().sendData(targetCon,data);
   },
   getAllPeers: function(callback) {
-    librtc.getAllPeers(callback);
+    this.getLibRtc().getAllPeers(callback);
   },
-  onPeerOpen: function(id) {
+  onPeerOpen: function(yieldObj,id) {
     // Peerの接続完了
     console.log('onPeerOpen:',id);
     if (id) {
       this.you.set('peer_id',id);
     }
+    yieldObj.next();
   },
   onCall : function(media) {
     // 対向からのビデオチャット受信(Yourモデルで動作)
     if (media) {
       console.log('onCall');
-      this.you.trigger('recieve_call',media);
+      //this.you.trigger('recieve_call',media);
+      this.tracker.onRecieveCall(media);
     }
   },
   onConnection : function(data) {
     // 対向からのデータ通信受信(other->you)
     console.log('onConnection');
     if (data) {
-      this.you.trigger('recieve_data',data);
+      //this.you.trigger('recieve_data',data);
+      this.tracker.onRecieveData(data);
     }
   },
   onPeerClose : function() {
@@ -189,8 +174,36 @@ var WebRtcAdapter = Backbone.Model.extend({
     // peer.js改造しないと判定できないかも
     //this.trigger('remove_video',this);
   },
+  setUpMediaParams: function() {
+    // video-sizeとFrameRateの設定(デフォルト、画面から取得)
+    this.width = this.config.get('width');
+    this.height = this.config.get('height');
+    let size = this.config.get('video_sizes').filter(function(size,index){
+      return (size['id'] == this.you.get('size_id'))?true:false;
+    },{'you': this.you});
+    console.log(size);
+    if (size.length > 0) {
+      this.width = size[0]['width'];
+      this.height = size[0]['height'];
+    }
+
+    this.maxFrame = this.config.get('maxFrameRate');
+    this.minFrame = this.config.get('minFrameRate');
+    let frame = this.config.get('frame_rates').filter(function(frame,index) {
+      return (frame['id'] == this.you.get('rate_id'))?true:false;
+    },{'you': this.you});
+    if (frame.length > 0) {
+      this.maxFrame = frame[0]['max'];
+      this.minFrame = frame[0]['min'];
+    }
+    console.log('setUp VideoSize/FrameRate:',this.width,this.height,this.maxFrame,this.minFrame);
+  },
+  getLibRtc: function() {
+    return librtc;
+  }
 },{
   getMediaStream: function() {
+    // libMediaStreamをラッピング
     return libMs;
   },
 });

@@ -25,36 +25,17 @@ var RtcTextChatView = Backbone.View.extend({
   },
   postTextChat: function(e){
     e.preventDefault();
-    console.log('postTextChat');
     var text = $('#text-chat').val();
+    console.log('postTextChat text:',text);
     if (!_.isEmpty(text)) {
-      // 対象全員に送信
-      this.collection.each(function(member){
-        if (!member.get('is_owner')) {
-
-          var chat = {
-            event_name: 'send_chat_text',
-            info : {
-              text: text,
-              user_name: this.model.you.get('user_name')
-            }
-          }
-          librtc.sendData(member.get('rtc_data'),chat);
-        } else {
-          var chat = {
-            text: text,
-            user_name: this.model.you.get('user_name')
-          }
-          this.onRecieveChat(chat);
-        }
-      },this);
+      this.model.tracker.sendTextChat(text);
     }
   },
   onRecieveChat: function(chat) {
     // テキストチャットを追加
     console.log(chat,'onRecieveChat');
     if (!_.isEmpty(chat)) {
-      var chatModel = new ChatModel({text: chat['text'],user_name: chat['user_name']});
+      var chatModel = new ChatModel({'text': chat['text'],'user_name': chat['user_name'],'post_date': chat['post_date']});
       var newRecord = new RtcTextChatRecordView({model: chatModel});
       this.$el.find('#text-chat-table').append(newRecord.render().el);
 
@@ -79,13 +60,9 @@ var RtcTextChatRecordView = Backbone.View.extend({
   initialize: function (args) {
     // super
   },
-  getNowDate: function() {
-    var date = new Date();
-    return ([date.getFullYear(), date.getMonth() + 1, date.getDate()].join('/') + ' ' + date.toLocaleTimeString());
-  },
   render: function() {
     this.$el.append(
-      '<td class="chat-date">' + this.getNowDate() + '</td>'
+      '<td class="chat-date">' + this.model.get('post_date') + '</td>'
       + '<td class="chat-name">' + this.model.get('user_name') + '</td>'
       + '<td>' + this.model.get('text').replace(/\n/g, '<br>') + '</td>'
     );

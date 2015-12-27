@@ -68,7 +68,11 @@ var debug = true;
 
       // あなた自身
       this.you = new User({is_owner: true});
-      this.adapter = new WebRtcAdapter({you: this.you,config: this.config});
+      this.tracker = new Tracker({'you': this.you,'config': this.config,'collection': this.collection});
+      this.you.set('tracker',this.tracker);
+
+      // 共通:モーダルウインドリソース
+      this.modal = new ModalVideoView({'config': this.config});
 
       this.renderInitView();
     },
@@ -80,12 +84,12 @@ var debug = true;
       // 初期表示
       this.render('#list-your-info');
       if (_.isEmpty(this.userInfoView)) {
-        this.userInfoView = new UserInfoView({model: this.you,config: this.config});
+        this.userInfoView = new UserInfoView({'model': this.you,'config': this.config});
       } else {
         this.userInfoView.render();
       }
       // WebRTCは強制停止
-      this.adapter.stopRtc();
+      this.tracker.stopRtc();
     },
     renderRtcView: function() {
       // RTCページ表示(メニュークリック)
@@ -93,17 +97,17 @@ var debug = true;
 
       // 機能ブロックセット
       if (_.isEmpty(this.rtcVideoView )) {
-        this.rtcVideoView = new RtcVideoListView({collection: this.collection,model: {you: this.you,adapter: this.adapter}});
+        this.rtcVideoView = new RtcVideoListView({'collection': this.collection,'model': {you: this.you,'tracker': this.tracker},'modal':this.modal});
       } else {
         this.rtcVideoView.render();
       }
       if (_.isEmpty(this.rtcUserList )) {
-        this.rtcUserList = new UserPeerListView({collection: this.collection,model: {adapter: this.adapter}});
+        this.rtcUserList = new UserPeerListView({'collection': this.collection,'model': {'tracker': this.tracker}});
       } else {
         this.rtcUserList.render();
       }
       if (_.isEmpty(this.rtcTextChatView )) {
-        this.rtcTextChatView = new RtcTextChatView({collection: this.collection,model: {you: this.you,adapter: this.adapter}});
+        this.rtcTextChatView = new RtcTextChatView({'collection': this.collection,'model': {'you': this.you,'tracker': this.tracker}});
       } else {
         this.rtcTextChatView.render();
       }
@@ -114,7 +118,17 @@ var debug = true;
       }
 
       // RTC-ON カメラ接続からSTART
-      this.adapter.startRtc();
+      let yieldObj = this.tracker.startRtc();
+      this.tracker.set('yield_obj',yieldObj);
+      //console.log(yieldObj);
+      try {
+        yieldObj.next();
+      } catch(e) {
+        console.log(e);
+        return;
+      }
+      //console.log(yieldObj);
+      //yieldObj.next(yieldObj);
     },
     render: function(activeId) {
       $('#side-menu li').removeClass('active');

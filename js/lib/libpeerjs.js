@@ -48,11 +48,9 @@ librtc.setupUserMediaSetting = function(width,height,maxRate,minRate,cameraId) {
                     }]
                 }
               };
-console.log('cameraId!!!:',cameraId);
   if (cameraId !== undefined && cameraId !== '') {
     params['video']['optional'].push({'sourceId':cameraId});
   }
-  console.log('now!!!:',params);
   return params;
 }
 
