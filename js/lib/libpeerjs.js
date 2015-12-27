@@ -9,23 +9,10 @@ var yourStream = null;
 //
 // Camere/MicroPhone Setup
 //
-librtc.initYourCamera = function(width,height,maxRate,minRate,callbacks) {
+librtc.initYourCamera = function(width,height,maxRate,minRate,cameraId,callbacks) {
   if (navigator.getUserMedia) {
     // デバイスを取得
-    navigator.getUserMedia({
-      audio: true,
-      video: {
-          mandatory: {
-              minWidth: width ,
-              minHeight: height ,
-              maxFrameRate: maxRate,
-              minFrameRate: minRate
-          },
-          optional: [{
-              minFrameRate: minRate
-          }]
-      }
-    }, function (stream) {
+    navigator.getUserMedia(librtc.setupUserMediaSetting(width,height,maxRate,minRate,cameraId), function (stream) {
       librtc.debugLog("create Your Camera");
       yourStream = stream;
       if (callbacks['init']) {
@@ -42,6 +29,31 @@ librtc.initYourCamera = function(width,height,maxRate,minRate,callbacks) {
     // ブラウザ非対応
     alert('API：getUserMedia Not Found');
   }
+}
+
+//
+// getUserMediaのパラメータ設定
+//
+librtc.setupUserMediaSetting = function(width,height,maxRate,minRate,cameraId) {
+  let params = {audio: true,
+                video: {
+                    mandatory: {
+                        minWidth: width ,
+                        minHeight: height ,
+                        maxFrameRate: maxRate,
+                        minFrameRate: minRate
+                    },
+                    optional: [{
+                        minFrameRate: minRate
+                    }]
+                }
+              };
+console.log('cameraId!!!:',cameraId);
+  if (cameraId !== undefined && cameraId !== '') {
+    params['video']['optional'].push({'sourceId':cameraId});
+  }
+  console.log('now!!!:',params);
+  return params;
 }
 
 //
@@ -269,7 +281,7 @@ librtc.getAllPeers = function(callback) {
 librtc.onListAllPeers = function(callback,peers) {
   if (peers && peers.length > 0) {
     for (var i = 0; i < peers.length; i++) {
-      librtc.debugLog("peer ID:",peers[i]);
+      librtc.debugLog("peer ID:"+peers[i]);
     }
     callback(peers);
   }

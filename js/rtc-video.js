@@ -42,7 +42,7 @@ var RtcVideoListView = Backbone.View.extend({
       }
     },this);
     if (!isAlready) {
-      console.log('new');
+      console.log('new User Video tag');
       // 新規Peer検出
       targetUser = new User({peer_id: media.peer,rtc_media: media});
       this.collection.add(targetUser);
@@ -75,7 +75,7 @@ var RtcVideoListView = Backbone.View.extend({
       this.collection.add(targetUser);
     }
     if (targetUser) {
-      targetUser.setDataEvent();
+      this.model.adapter.setDataEvent(targetUser);
     }
   },
   sendProfile: function(target) {
@@ -88,7 +88,7 @@ var RtcVideoListView = Backbone.View.extend({
         email: this.model.you.get('email')
       }
     }
-    librtc.sendData(targetDataCon,profile);
+    this.model.adapter.sendData(targetDataCon,profile);
   },
   render: function(){
     $('#user-form').hide();
@@ -100,7 +100,7 @@ var RtcVideoListView = Backbone.View.extend({
 // Videoタグ情報VIEW
 var RtcVideoTagView = Backbone.View.extend({
   tagName: 'div',
-  className: 'col-sm-6 col-md-3',
+  className: 'col-sm-4 col-md-4 col-lg-3',
   initialize: function (args) {
     // super
     // TODO:差分差し替えのほうがよい

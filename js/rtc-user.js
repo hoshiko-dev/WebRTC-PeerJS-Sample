@@ -1,15 +1,25 @@
 'use strict';
+
 var User = Backbone.Model.extend({
   defaults: {
     peer_id: '',
     user_name: '',
     email: '',
+    width: 640,
+    hight: 480,
+    maxFrameRate: 30,
+    minFrameRate: 1,
+    cameraId: 0,
     src: '',
     stream: null,
     rtc_media: null,
     rtc_data: null,
     rtc_video_src: '',
     is_owner: false,
+    camera_devices: [],
+    camera_id: '',
+    size_id: '',
+    rate_id: ''
   },
   url: '#', // dummy
   initialize: function (args) {
@@ -17,156 +27,29 @@ var User = Backbone.Model.extend({
     this.on('invalid', function(model, error){
       $("#error").html(error);
     });
+    // カメラデバイスの取得
+    if (this.get('is_owner')) {
+      //libMs.getMediaStreams(this.setVideDevice.bind(this));
+      WebRtcAdapter.getMediaStream().getMediaStreams(this.setVideDevice.bind(this));
+
+    }
   },
   validate: function(attrs) {
-    // samples
-    // if(_.isEmpty(attrs.user_id)){
-    //   return 'user-idが指定されてません';
-    // }
   },
-  startRtc: function(models) {
-    // WebRTC起動
-    //　自分のカメラ接続を開始
-    var callbacks = {
-      'init': this.onYourCamera.bind(this)
-    };
-    this.config = models.config;
-    librtc.initYourCamera(
-      this.config.get('width'),
-      this.config.get('height'),
-      this.config.get('maxFrameRate'),
-      this.config.get('minFrameRate'),
-      callbacks);
-  },
-  onYourCamera: function(yourStream) {
-    console.log('onYourCamera');
-    // 自身のカメラをセット
-    var src = URL.createObjectURL(yourStream);
-    if (src) {
-      this.set('stream',yourStream);
-      this.set('src',src);
-      this.createYourPeer();
-    }
-  },
-  createYourPeer: function() {
-    console.log('createYourPeer');
-    // PeerJSの接続開始
-    librtc.createYourPeer(
-      this.config.get('rtcHost'),
-      this.config.get('rtcPort'),
-      this.config.get('key'),
-      this.config.get('config'),
-      this.config.get('debug'),
-      this.config.get('path'),
-      this.config.get('secure'),
-      this.config.get('id')
-    );
-    var callbacks = {
-      'open': this.onPeerOpen.bind(this),
-      'call': this.onCall.bind(this),
-      'connection': this.onConnection.bind(this),
-      'close': this.onPeerClose.bind(this),
-      'disconnected': this.onDisconnected.bind(this),
-      'error': this.onPeerError.bind(this),
-    };
-    librtc.setPeerEvent(callbacks);
-  },
-  createMedia: function() {
-    console.log('createMedia');
-    // ビデオチャット開始（You->other)
-    var targetMedia = librtc.createRtcMedia(this.get('peer_id'));
-    if (targetMedia) {
-      // VIDEOタグを追加
-      this.trigger('create_call',this);
-
-      this.set('rtc_media',targetMedia);
-      var callbacks = {
-        'stream': this.onStream.bind(this),
-        'close': this.onMediaClose.bind(this),
-        'error': this.onMediaError.bind(this),
-      };
-      librtc.setMediaEvent(targetMedia,callbacks);
+  setVideDevice: function(deviceInfo) {
+    if (deviceInfo !== null) {
+      let devices = this.get('camera_devices');
+      devices.push(deviceInfo);
+      this.set('camera_devices',devices);
     } else {
-      alert('test :target Media Error');
+      // 取得完了
+      let devices = this.get('camera_devices');
+      if (devices.length > 0) {
+        this.trigger('refres_view');
+      } else {
+        alert('Camera Not Found');
+      }
     }
-  },
-  closeMedia: function() {
-    // ビデオチャット切断
-    librtc.closeMedia(this.get('rtc_media'));
-  },
-  setMediaEvent: function() {
-    // ビデオチャットイベントセット(Other->Youの場合)
-    var callbacks = {
-      'stream': this.onStream.bind(this),
-      'close': this.onMediaClose.bind(this),
-      'error': this.onMediaError.bind(this),
-    };
-    librtc.setMediaEvent(this.get('rtc_media'),callbacks);
-  },
-  createData: function() {
-    var targetData = librtc.createRtcData(this.get('peer_id'));
-    if (targetData) {
-      this.set('rtc_data',targetData);
-      var callbacks = {
-        'data': this.onDataRecieve.bind(this),
-        'open': this.onDataOpen.bind(this),
-        'close': this.onDataClose.bind(this),
-        'error': this.onDataError.bind(this),
-      };
-      librtc.setDataEvent(targetData,callbacks);
-    } else {
-      alert('test :target Data Error');
-    }
-  },
-  closeData: function() {
-    librtc.closeData(this.get('rtc_data'));
-  },
-  setDataEvent: function() {
-    // データ送信イベントセット(Other->Youの場合)
-    var callbacks = {
-      'data': this.onDataRecieve.bind(this),
-      'open': this.onDataOpen.bind(this),
-      'close': this.onDataClose.bind(this),
-      'error': this.onDataError.bind(this),
-    };
-    librtc.setDataEvent(this.get('rtc_data'),callbacks);
-  },
-  stopRtc: function() {
-    // Peerの強制切断で一括削除
-    librtc.destroy();
-  },
-  onPeerOpen: function(id) {
-    // Peerの接続完了
-    console.log('onPeerOpen');
-    if (id) {
-      this.set('peer_id',id);
-    }
-  },
-  onCall : function(media) {
-    // 対向からのビデオチャット受信(Yourモデルで動作)
-    if (media) {
-      console.log('onCall');
-      this.trigger('recieve_call',media);
-    }
-  },
-  onConnection : function(data) {
-    // 対向からのデータ通信受信
-    console.log('onConnection');
-    if (data) {
-      this.trigger('recieve_data',data);
-    }
-  },
-  onPeerClose : function() {
-    console.log('onPeerClose');
-  },
-  onDisconnected : function() {
-    console.log('onDisconnected');
-  },
-  onPeerError : function(err) {
-    console.log('onPeerError');
-    // TODO: VIDEOタグ、リスト表示をリフレッシュ
-    // peer.js改造しないと判定できないかも
-    //this.trigger('remove_video',this);
   },
   onStream: function(stream) {
     console.log('onStream');
@@ -188,13 +71,6 @@ var User = Backbone.Model.extend({
   onMediaError: function(err) {
     console.log('onMediaError');
   },
-  onDataRecieve: function(data) {
-    // データ受信
-    console.log('onDataRecieve');
-    if (!_.isEmpty(data) && !_.isEmpty(data['event_name'])) {
-      this.parseData(data);
-    }
-  },
   onDataOpen: function() {
     // コネクションが利用可能となった
     console.log('onDataOpen');
@@ -206,11 +82,18 @@ var User = Backbone.Model.extend({
     console.log('onDataClose');
     this.set({rtc_data: null}, {silent: true});
   },
+  onDataRecieve: function(data) {
+    // データ受信
+    console.log('onDataRecieve');
+    if (!_.isEmpty(data) && !_.isEmpty(data['event_name'])) {
+      this.parseData(data);
+    }
+  },
   onDataError: function(err) {
     console.log('onDataError');
   },
   parseData: function(data) {
-    // 受信データの処理を実施
+    // WebRTC:データコネクション制御
     if (data['event_name'] === 'send_profile') {
       // 対向ユーザのプロフィールを受信
       var profile = data['info'];
@@ -238,10 +121,15 @@ var UserCollection = Backbone.Collection.extend({
 
 // 自身の情報
 var UserInfoView = Backbone.View.extend({
+  defaults: {
+    config: null
+  },
   el: "#user-form",
   initialize: function (args) {
+    this.config = args.config;
     // super
     this.render();
+    this.listenTo(this.model,'refres_view',this.render);
   },
   events: {
     'click #user-form-action': 'submit'
@@ -252,6 +140,9 @@ var UserInfoView = Backbone.View.extend({
       {
         user_name: $('#user-name').val(),
         email: $('#email').val(),
+        camera_id: $('#camera option:selected').val(),
+        size_id: $('#videoSize option:selected').val(),
+        rate_id: $('#frameRate option:selected').val(),
       },{validate: true})
     ){
       alert('Error!!!');
@@ -261,12 +152,36 @@ var UserInfoView = Backbone.View.extend({
   },
   render: function() {
     $('#user-form').show();
-    $('#rtc-view').hide();
-    $('#all-user-list').hide();
-    $('#rtc-text-chat-area').hide();
+    $('#rtc-view,#all-user-list,#rtc-text-chat-area').hide();
 
     $('#user-name').val(this.model.get('user_name'));
     $('#email').val(this.model.get('email'));
+    // カメラデバイスの追加
+    let devices = this.model.get('camera_devices');
+    $('#camera').children().remove();
+    for (let index in devices) {
+      $('#camera').append(
+        '<option value="' + devices[index]['id'] + '"' + ((this.model.get('camera_id') === devices[index]['id'])?' selected ':'') + '>'+ devices[index]['name'] + ' ' + devices[index]['label']  + '</option>'
+      );
+    }
+    // 画面サイズ
+    console.log('$$$$',this.model.get('size_id'));
+    $('#videoSize').children().remove();
+    let sizes = this.config.get('video_sizes');
+    for (let index in sizes) {
+      console.log('----',sizes[index]['id']);
+      $('#videoSize').append(
+        '<option value="' + sizes[index]['id'] + '"' + ((this.model.get('size_id') == sizes[index]['id'])?' selected ':'') + '>'+ sizes[index]['label'] + '</option>'
+      );
+    }
+    // フレームレート
+    $('#frameRate').children().remove();
+    let rates = this.config.get('frame_rates');
+    for (let index in rates) {
+      $('#frameRate').append(
+        '<option value="' + rates[index]['id'] + '"' + ((this.model.get('rate_id') == rates[index]['id'])?' selected ':'') + '>'+ rates[index]['label'] + '</option>'
+      );
+    }
     return this;
   }
 });
