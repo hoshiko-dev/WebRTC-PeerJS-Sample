@@ -96,40 +96,48 @@ var WebRtcAdapter = Backbone.Model.extend({
     this.getLibRtc().closeMedia(targetUser.get('rtc_media'));
   },
   setMediaEvent: function(targetUser) {
-    // ビデオチャットイベントセット(Other->Youの場合)
-    var callbacks = {
-      'stream': targetUser.onStream.bind(targetUser),
-      'close': targetUser.onMediaClose.bind(targetUser),
-      'error': targetUser.onMediaError.bind(targetUser),
-    };
-    this.getLibRtc().setMediaEvent(targetUser.get('rtc_media'),callbacks);
+    if (!_.isEmpty(targetUser.get('rtc_media'))) {
+      console.log('setMediaEvent:',targetUser);
+      // ビデオチャットイベントセット(Other->Youの場合)
+      var callbacks = {
+        'stream': targetUser.onStream.bind(targetUser),
+        'close': targetUser.onMediaClose.bind(targetUser),
+        'error': targetUser.onMediaError.bind(targetUser),
+      };
+      this.getLibRtc().setMediaEvent(targetUser.get('rtc_media'),callbacks);
+    }
   },
   createData: function(targetUser,yeildObj) {
-    var targetData = this.getLibRtc().createRtcData(targetUser.get('peer_id'));
-    if (targetData) {
-      targetUser.set('rtc_data',targetData);
-      console.log('createData',yeildObj);
-      var callbacks = {
-        'data': targetUser.onDataRecieve.bind(targetUser),
-        'open': targetUser.onYourDataOpen.bind(targetUser,yeildObj),
-        'close': targetUser.onDataClose.bind(targetUser),
-        'error': targetUser.onDataError.bind(targetUser),
-      };
-      this.getLibRtc().setDataEvent(targetData,callbacks);
+    if (!_.isEmpty(targetUser.get('peer_id'))) {
+      var targetData = this.getLibRtc().createRtcData(targetUser.get('peer_id'));
+      if (!_.isEmpty(targetData)) {
+        targetUser.set('rtc_data',targetData);
+        console.log('createData',yeildObj);
+        var callbacks = {
+          'data': targetUser.onDataRecieve.bind(targetUser),
+          'open': targetUser.onYourDataOpen.bind(targetUser,yeildObj),
+          'close': targetUser.onDataClose.bind(targetUser),
+          'error': targetUser.onDataError.bind(targetUser),
+        };
+        this.getLibRtc().setDataEvent(targetData,callbacks);
+      }
     }
   },
   closeData: function(targetUser) {
     this.getLibRtc().closeData(targetUser.get('rtc_data'));
   },
   setDataEvent: function(targetUser) {
-    // データ送信イベントセット(Other->Youの場合)
-    var callbacks = {
-      'data': targetUser.onDataRecieve.bind(targetUser),
-      'open': targetUser.onDataOpen.bind(targetUser),
-      'close': targetUser.onDataClose.bind(targetUser),
-      'error': targetUser.onDataError.bind(targetUser),
-    };
-    this.getLibRtc().setDataEvent(targetUser.get('rtc_data'),callbacks);
+    if (!_.isEmpty(targetUser.get('rtc_data'))) {
+      console.log('setDataEvent:',targetUser);
+      // データ送信イベントセット(Other->Youの場合)
+      var callbacks = {
+        'data': targetUser.onDataRecieve.bind(targetUser),
+        'open': targetUser.onDataOpen.bind(targetUser),
+        'close': targetUser.onDataClose.bind(targetUser),
+        'error': targetUser.onDataError.bind(targetUser),
+      };
+      this.getLibRtc().setDataEvent(targetUser.get('rtc_data'),callbacks);
+    }
   },
 
   sendData: function(targetCon,data) {
@@ -178,23 +186,28 @@ var WebRtcAdapter = Backbone.Model.extend({
     // video-sizeとFrameRateの設定(デフォルト、画面から取得)
     this.width = this.config.get('width');
     this.height = this.config.get('height');
-    let size = this.config.get('video_sizes').filter(function(size,index){
+    let size = this.config.get('video_sizes').find(function(size,index){
       return (size['id'] == this.you.get('size_id'))?true:false;
     },{'you': this.you});
-    console.log(size);
-    if (size.length > 0) {
-      this.width = size[0]['width'];
-      this.height = size[0]['height'];
+    //if (size.length > 0) {
+    if (!_.isEmpty(size)) {
+      //this.width = size[0]['width'];
+      this.width = size['width'];
+      //this.height = size[0]['height'];
+      this.height = size['height'];
     }
 
     this.maxFrame = this.config.get('maxFrameRate');
     this.minFrame = this.config.get('minFrameRate');
-    let frame = this.config.get('frame_rates').filter(function(frame,index) {
+    let frame = this.config.get('frame_rates').find(function(frame,index) {
       return (frame['id'] == this.you.get('rate_id'))?true:false;
     },{'you': this.you});
-    if (frame.length > 0) {
-      this.maxFrame = frame[0]['max'];
-      this.minFrame = frame[0]['min'];
+    //if (frame.length > 0) {
+    if (!_.isEmpty(frame)) {
+      //this.maxFrame = frame[0]['max'];
+      this.maxFrame = frame['max'];
+      //this.minFrame = frame[0]['min'];
+      this.minFrame = frame['min'];
     }
     console.log('setUp VideoSize/FrameRate:',this.width,this.height,this.maxFrame,this.minFrame);
   },

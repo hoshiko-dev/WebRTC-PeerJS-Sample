@@ -113,13 +113,11 @@ var RtcVideoTagView = Backbone.View.extend({
       '      <video id="member-' + this.model.get('peer_id') + '" src="' + this.model.get('src') + '" class="video-size-minimal" autoplay  ' + (this.model.get('is_owner')?" muted='muted'":"") + '></video>' +
       '     </a>' +
       '    <div class="caption pt0">' +
-      '      <h6 class="caption-user-name ' +
+      '      <h6 class="caption-user-name mt0 ' +
       (this.model.get('is_owner')?'bg-primary':'bg-success') +
-      ' mt0">Name:' + this.model.get('user_name') + '</h6>' +
-      '      <h6 class="caption-memo">Peer-ID:' + this.model.get('peer_id') + '</h6>' +
-      '    </div>' +
-      '    <div>' +
-      '        <a href="#" id="mute-member-' + this.model.get('peer_id') + '" class="btn btn-block btn-info btn-xs rtc-video-mute-on"><i class="fa fa-2x fa-' + (this.isMuted()?'microphone-slash':'microphone') + '" ></i></a>' +
+      '          ">name: ' + this.model.get('user_name') + '</h6>' +
+      '      <h6 class="caption-memo bg-info">peer id: ' + this.model.get('peer_id') + '</h6>' +
+      '      <a href="#" id="mute-member-' + this.model.get('peer_id') + '" class="btn btn-block btn-info btn-xs rtc-video-mute-on"><i class="fa fa-' + (this.isMuted()?'microphone-slash':'microphone') + '" ></i></a>' +
       '    </div>' +
       '  </div>'
     );
@@ -141,17 +139,27 @@ var ModalVideoView = Backbone.View.extend({
     this.listenTo(this,'open',this.initMute);
   },
   events: {
-    'click .modal-video-fullscrenn': 'setFullScreen',
+    'click .modal-video-fullscreen': 'setFullScreen',
     'click .modal-video-mute': 'setMute',
+    'click .modal-video-hide': 'modalHide',
   },
   setFullScreen: function(e) {
     e.preventDefault();
+    console.log('setFullScreen');
     // 全画面(Chrome Only)
     if ($('#modal-video-view')[0].webkitRequestFullscreen) {
       $('#modal-video-view')[0].webkitRequestFullscreen();
     } else {
       alert('full screen not support');
     }
+  },
+  modalHide: function(e) {
+    console.log('modalHide');
+    // closeイベントはbootstrap3側に任せる
+    // video映像を削除
+    $('#modal-video-view').attr('src','');
+    // 強制mute
+    $('#modal-video-view').prop('muted',false);
   },
   initMute: function() {
     console.log('init Mute',this.attributes.modal_is_owner);

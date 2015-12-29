@@ -5,21 +5,22 @@ var debug = true;
   var RtcConfig = Backbone.Model.extend({
     // TODO:testコード 後で何とかしたい
     defaults: {
+      appPath: '/webRTC-PeerJS-Sample/',
       width: 960,
       height: 540,
       maxFrameRate: 30,
       minFrameRate: 1,
-      rtcHost: "",
+      rtcHost: "hoshiko-dev.net",
       rtcPort: 9000,
-      key: "",
+      key: "hoshiko-dev",
       config: {
           "iceServers": [
-            {url: 'stun:XXX.XXX.XXX.XXX:3478'},
-            {url: 'turn:hogehoge@XXX.XXX.XXX.XXX:3478', credential: 'fugafuga' }
+            {url: 'stun:hoshiko-dev.net:3478'},
+            {url: 'turn:hoshiko-dev@hoshiko-dev.net:3478', credential: 'hogehogefugafuga' }
           ]
       },
       debug: 3,
-      path: "",
+      path: "peerjs/",
       frame_rates: [
         {"id": 1,"label": 'max:30 min:1',"min":1,"max":30},
         {"id": 2,"label": 'max:5 min:1',"min":1,"max":5},
@@ -136,8 +137,10 @@ var debug = true;
       return this;
     }
   });
-
-
   // サイドメニュー生成
   var menuListView = new MenuListView();
+  // router
+  var router = new RtcRouter({'you' : menuListView.you});
+
+  Backbone.history.start({'pushState':false,'root':menuListView.config.get('appPath')});
 }());

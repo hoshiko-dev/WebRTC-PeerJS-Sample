@@ -17,7 +17,7 @@ var User = Backbone.Model.extend({
     rtc_video_src: '',
     is_owner: false,
     camera_devices: [],
-    camera_id: '',
+    camera_id: null,
     size_id: '1',
     rate_id: '1',
     connect_yeild: null,
@@ -193,6 +193,10 @@ var UserInfoView = Backbone.View.extend({
       $('#camera').append(
         '<option value="' + devices[index]['id'] + '"' + ((this.model.get('camera_id') === devices[index]['id'])?' selected ':'') + '>'+ devices[index]['name'] + ' ' + devices[index]['label']  + '</option>'
       );
+    }
+    if (!_.isEmpty(devices) && this.model.get('camera_id') == null) {
+      // 初回
+      this.model.set('camera_id',devices[0]['id']);
     }
     // 画面サイズ
     $('#videoSize').children().remove();

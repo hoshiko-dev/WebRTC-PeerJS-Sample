@@ -20,6 +20,7 @@ librtc.initYourCamera = function(width,height,maxRate,minRate,cameraId,callbacks
         func(stream);
       }
     }, function (err) {
+      console.log(err);
       // PCのデバイス状況によりエラーになるケースがあるので、リトライ等実装したほうがよい
       // 1)width/heightの値がデバイスの許容を超えるケース(サイズを調整してリトライ)
       // 2)デバイスは正常だがPC側の問題でタイミングが早すぎるケース(時間をおいてリトライ)
@@ -40,6 +41,8 @@ librtc.setupUserMediaSetting = function(width,height,maxRate,minRate,cameraId) {
                     mandatory: {
                         minWidth: width ,
                         minHeight: height ,
+                        maxWidth: width ,
+                        maxHeight: height ,
                         maxFrameRate: maxRate,
                         minFrameRate: minRate
                     },
@@ -51,6 +54,7 @@ librtc.setupUserMediaSetting = function(width,height,maxRate,minRate,cameraId) {
   if (cameraId !== undefined && cameraId !== '') {
     params['video']['optional'].push({'sourceId':cameraId});
   }
+  console.log('getUserMedia params:',params);
   return params;
 }
 

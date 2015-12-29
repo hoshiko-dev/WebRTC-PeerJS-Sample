@@ -20,18 +20,16 @@ var UserPeerListView = Backbone.View.extend({
     var callback = this.onGetAllPeers.bind(this);
     this.model.tracker.getAllPeers(callback);
   },
+  // callback
   onGetAllPeers: function(peerIds) {
     _.each(peerIds,function(peerId){
-      var isAlready = false;
-      this.collection.each(function(target){
-        if(target.get('peer_id') == peerId) {
-          isAlready = true;
-          return false;
-        }
+      let targetUser = this.collection.find(function(user){
+        return (user.get('peer_id') == peerId);
       });
-      if (!isAlready) {
-        var user = new User({'peer_id': peerId,'tracker': this.model.tracker});
-        this.collection.add(user);
+      if (_.isEmpty(targetUser)) {
+        targetUser = new User({'peer_id': peerId,'tracker': this.model.tracker});
+        this.collection.add(targetUser);
+        this.model.tracker.addRtcEvent(targetUser);
       }
     },this);
   },
@@ -87,6 +85,7 @@ var UserRecordView = Backbone.View.extend({
     );
     return this;
   },
+  //events
   connectPeer: function(e) {
     e.preventDefault();
     let yieldObj = this.model.tracker.connectPeer(this.model.user);
