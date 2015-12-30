@@ -38,7 +38,7 @@ var debug = true;
         {"id": 4,"label": '320x180(16:9)',"width":320,'height':180},
         {"id": 5,"label": '480x270(16:9)',"width":480,'height':270},
         {"id": 6,"label": '640x360(16:9)',"width":640,'height':360},
-        {"id": 7,"label": '1248x702(16:9)',"width":1248,'height':702},
+        {"id": 7,"label": '1280x720(16:9)',"width":1280,'height':720},
         {"id": 8,"label": '1440x810(16:9)',"width":1440,'height':810},
         {"id": 9,"label": '1920x1080(16:9)',"width":1920,'height':1080},
         {"id":10,"label": '320x240(4:3)',"width":320,'height':240},
@@ -80,6 +80,7 @@ var debug = true;
     events: {
       "click #a-your-info" : "renderInitView",
       "click #a-webrtc" : "renderRtcView",
+      "click #a-camera-test" : "renderCameraTest",
     },
     renderInitView: function() {
       // 初期表示
@@ -127,6 +128,18 @@ var debug = true;
       let yieldObj = this.tracker.startRtc();
       this.tracker.set('yield_obj',yieldObj);
       this.nextYield(yieldObj);
+    },
+    renderCameraTest: function() {
+      // RTCページ表示(メニュークリック)
+      this.render('#camera-list');
+
+      if (_.isEmpty(this.cameraResultView)) {
+        this.cameraResultView = new CameraResultView({'you': this.you,'config': this.config,'tracker': this.tracker});
+      } else {
+        this.cameraResultView.render();
+      }
+      // WebRTCは強制停止
+      this.tracker.stopRtc();
     },
     nextYield: function(yieldObj) {
       try {

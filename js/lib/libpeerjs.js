@@ -39,10 +39,23 @@ librtc.setupUserMediaSetting = function(width,height,maxRate,minRate,cameraId) {
   let params = {audio: true,
                 video: {
                     mandatory: {
+                        // width: 0,   // Chrome not support
+                        // hight: 0,   // Chrome not support
                         minWidth: width ,
                         minHeight: height ,
                         maxWidth: width ,
                         maxHeight: height ,
+                        // echoCancellation: true,  // Chrome not support
+                        googEchoCancellation: true,
+                        googEchoCancellation2: true,
+                        googDAEchoCancellation: true,
+                        googAutoGainControl: true,
+                        googAutoGainControl2: true,
+                        googNoiseSuppression: true,
+                        googNoiseSuppression2: true,
+                        googHighpassFilter: true,
+                        // audioDebugRecording: true,  // Chrome not support
+                        googNoiseReduction: true,
                         maxFrameRate: maxRate,
                         minFrameRate: minRate
                     },

@@ -218,4 +218,8 @@ var WebRtcAdapter = Backbone.Model.extend({
     // libMediaStreamをラッピング
     return libMs;
   },
+  getCamera: function() {
+    // libCameraをラッピング
+    return libCamera;
+  },
 });

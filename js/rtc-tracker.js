@@ -128,4 +128,7 @@ var Tracker = Backbone.Model.extend({
     var date = new Date();
     return ([date.getFullYear(), date.getMonth() + 1, date.getDate()].join('/') + ' ' + date.toLocaleTimeString());
   },
+  getCameraTestResults: function(param,callback) {
+    WebRtcAdapter.getCamera().getCameraTestResults(param,callback);
+  }
 });

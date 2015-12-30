@@ -183,7 +183,7 @@ var UserInfoView = Backbone.View.extend({
   },
   render: function() {
     $('#user-form').show();
-    $('#rtc-view,#all-user-list,#rtc-text-chat-area').hide();
+    $('#camera-list,#rtc-view,#all-user-list,#rtc-text-chat-area').hide();
 
     $('#user-name').val(this.model.get('user_name'));
     $('#email').val(this.model.get('email'));
