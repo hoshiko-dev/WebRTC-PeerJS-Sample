@@ -95,6 +95,8 @@ librtc.setPeerParams = function(host,port,key,config,debug,path,id) {
 }
 // Peerオブジェクトのイベント登録
 librtc.setPeerEvent = function(callbacks) {
+  // イベントの強制クリア
+  yourPeer.removeAllListeners();
   // Peer接続完了時
   yourPeer.on('open', function (id) {
     librtc.debugLog('Create Your Peer OK ID:' + id);
@@ -156,6 +158,8 @@ librtc.setPeerEvent = function(callbacks) {
 
 // Mediaオブジェクトのイベント登録
 librtc.setMediaEvent = function(targetMedia,callbacks) {
+  // イベントの強制クリア
+  targetMedia.removeAllListeners();
   // 対向PeerのMediaストリームが確立
   targetMedia.on('stream', function (stream) {
     librtc.debugLog('Create Media Stream. Target ID:' + targetMedia.peer);
@@ -184,6 +188,8 @@ librtc.setMediaEvent = function(targetMedia,callbacks) {
 
 // Dataオブジェクトのイベント登録
 librtc.setDataEvent = function(targetData,callbacks) {
+  // イベントの強制クリア
+  targetData.removeAllListeners();
   // Dataオブジェクト生成完了
   targetData.on('open', function () {
     librtc.debugLog('Data Open.' + targetData.peer);
