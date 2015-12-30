@@ -28,15 +28,16 @@ var User = Backbone.Model.extend({
     //super
     this.tracker = args.tracker;
 
-    this.on('invalid', function(model, error){
-      $("#error").html(error);
-    });
+    this.listenTo(this,'invalid',this.onIinvalid);
     // カメラデバイスの取得
     if (this.get('is_owner')) {
       WebRtcAdapter.getMediaStream().getMediaStreams(this.setVideDevice.bind(this));
     }
   },
   validate: function(attrs) {
+  },
+  onIinvalid: function(model,error) {
+    console.log('onIinvalid',error);
   },
   setVideDevice: function(deviceInfo) {
     if (deviceInfo !== null) {

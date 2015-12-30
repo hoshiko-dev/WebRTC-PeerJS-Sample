@@ -93,6 +93,11 @@ var debug = true;
       this.tracker.stopRtc();
     },
     renderRtcView: function() {
+      if ($('#list-webrtc').hasClass('active')) {
+        // RTC画面でRTCリンクをクリックしているか
+        return;
+      }
+
       // RTCページ表示(メニュークリック)
       this.render('#list-webrtc');
 
@@ -121,15 +126,15 @@ var debug = true;
       // RTC-ON カメラ接続からSTART
       let yieldObj = this.tracker.startRtc();
       this.tracker.set('yield_obj',yieldObj);
-      //console.log(yieldObj);
+      this.nextYield(yieldObj);
+    },
+    nextYield: function(yieldObj) {
       try {
         yieldObj.next();
       } catch(e) {
         console.log(e);
         return;
       }
-      //console.log(yieldObj);
-      //yieldObj.next(yieldObj);
     },
     render: function(activeId) {
       $('#side-menu li').removeClass('active');
@@ -143,4 +148,6 @@ var debug = true;
   var router = new RtcRouter({'you' : menuListView.you});
 
   Backbone.history.start({'pushState':false,'root':menuListView.config.get('appPath')});
+
+
 }());

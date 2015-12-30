@@ -8,6 +8,7 @@ var UserPeerListView = Backbone.View.extend({
     //this.getAllPeers();
     this.listenTo(this.collection,'add',this.addNewList);
     this.listenTo(this.collection,'get_start_peer',this.getAllPeers);
+    this.listenTo(this.collection,'remove',this.render);
   },
   events: {
     'click #get-all-peers': 'getAllPeers'
@@ -28,18 +29,35 @@ var UserPeerListView = Backbone.View.extend({
       });
       if (_.isEmpty(targetUser)) {
         targetUser = new User({'peer_id': peerId,'tracker': this.model.tracker});
+        console.log('user list new User:',targetUser);
         this.collection.add(targetUser);
         this.model.tracker.addRtcEvent(targetUser);
       }
     },this);
+    // CollectionからPeerIdsに存在Userを削除
+    let idList = this.collection.pluck('peer_id');
+    let removeTargets = _.difference(idList,peerIds);
+    if (!_.isEmpty(removeTargets)) {
+      let removeUsers = this.collection.filter(function(user){
+        return (_.contains(removeTargets,user.get('peer_id')));
+      });
+      console.log('user list remove users',removeUsers);
+      this.collection.remove(removeUsers,{'slient': true});
+      _.each(removeUsers,function(user) {
+        console.log('destory User',user);
+        user.destroy();
+      });
+    }
   },
   addNewList: function(user) {
+    console.log('addNewList:',user);
     var newRecord = new UserRecordView({model: {'user': user,'tracker': this.model.tracker}});
     this.$el.find('#users-table').append(newRecord.render().el);
     return this;
   },
   render: function() {
     this.$el.find('#users-table tr.user-info').remove();
+    console.log('user list render:',this.collection.length);
     this.collection.each(function(user){
       var newRecord = new UserRecordView({model: {'user': user,'tracker': this.model.tracker}});
       this.$el.find('#users-table').append(newRecord.render().el);
@@ -47,7 +65,6 @@ var UserPeerListView = Backbone.View.extend({
     $('#all-user-list').show();
     return this;
   }
-
 });
 // TABLEのユーザレコード
 var UserRecordView = Backbone.View.extend({
@@ -57,10 +74,15 @@ var UserRecordView = Backbone.View.extend({
     // super
     this.listenTo(this.model.user,'change',this.render);
     this.listenTo(this.model.user,'remove_video',this.render);
+    this.listenTo(this.model.user,'destroy',this.onDestroy);
   },
   events: {
     'click .peerConnect': 'connectPeer',
     'click .peerDisconnect': 'disconnectPeer'
+  },
+  onDestroy: function() {
+    console.log('List User Record destroy',this.model.user);
+    this.remove();
   },
   render: function(){
     var isActive = (_.isEmpty(this.model.user.get('src'))? false : true);
@@ -69,8 +91,8 @@ var UserRecordView = Backbone.View.extend({
       '<td class="text-center">' +
         (isActive?this.model.user.get('user_name'):'<strong class="text-danger">未接続</strong>')
       + '</td>'
-      + '<td class="text-center">' + this.model.user.get('peer_id') + '</td>'
-      + '<td class="text-center">' + this.model.user.get('email') + '</td>'
+      + '<td class="text-center">' + this.model.user.escape('peer_id') + '</td>'
+      + '<td class="text-center">' + this.model.user.escape('email') + '</td>'
       + '<td class="text-center">' +
         (isActive?'CONNECTED':'DISCONNECTED')
       + '</td>'

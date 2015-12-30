@@ -50,7 +50,6 @@ var WebRtcAdapter = Backbone.Model.extend({
     if (src) {
       this.you.set('stream',yourStream);
       this.you.set('src',src);
-      //this.createYourPeer();
     }
     yieldObj.next();
   },

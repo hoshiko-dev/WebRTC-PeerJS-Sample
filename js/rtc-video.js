@@ -46,16 +46,18 @@ var RtcVideoTagView = Backbone.View.extend({
     // super
     this.modal = args.modal;
 
-    // TODO:差分差し替えのほうがよい
     this.listenTo(this.model,'change',this.render);
     this.listenTo(this.model,'remove_video',this.destory);
+    this.listenTo(this.model,'destory',this.destory);
   },
   events: {
     'click .rtc-video-modal-on': 'renderModal',
     'click .rtc-video-mute-on': 'setMute',
   },
   destory: function() {
-    this.$el.remove();
+    console.log('video destory');
+    //this.$el.remove();
+    this.remove();
   },
   isMuted: function() {
     console.log('isMuted',$('#member-' + this.model.get('peer_id')).length);
@@ -68,7 +70,7 @@ var RtcVideoTagView = Backbone.View.extend({
   },
   setMute: function(e) {
     e.preventDefault();
-    console.log($('#member-'+ this.model.get('peer_id')).prop('muted'));
+    console.log('setMute video:' + $('#member-'+ this.model.get('peer_id')).prop('muted'));
     if ($('#member-'+ this.model.get('peer_id')).prop('muted')) {
       $('#modal-video-view').removeAttr('muted');
       $('#modal-video-view').prop('muted',false);
@@ -115,7 +117,7 @@ var RtcVideoTagView = Backbone.View.extend({
       '    <div class="caption pt0">' +
       '      <h6 class="caption-user-name mt0 ' +
       (this.model.get('is_owner')?'bg-primary':'bg-success') +
-      '          ">name: ' + this.model.get('user_name') + '</h6>' +
+      '          ">name: ' + this.model.escape('user_name') + '</h6>' +
       '      <h6 class="caption-memo bg-info">peer id: ' + this.model.get('peer_id') + '</h6>' +
       '      <a href="#" id="mute-member-' + this.model.get('peer_id') + '" class="btn btn-block btn-info btn-xs rtc-video-mute-on"><i class="fa fa-' + (this.isMuted()?'microphone-slash':'microphone') + '" ></i></a>' +
       '    </div>' +

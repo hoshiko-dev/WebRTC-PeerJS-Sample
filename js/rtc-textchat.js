@@ -63,8 +63,8 @@ var RtcTextChatRecordView = Backbone.View.extend({
   render: function() {
     this.$el.append(
       '<td class="chat-date">' + this.model.get('post_date') + '</td>'
-      + '<td class="chat-name">' + this.model.get('user_name') + '</td>'
-      + '<td>' + this.model.get('text').replace(/\n/g, '<br>') + '</td>'
+      + '<td class="chat-name">' + this.model.escape('user_name') + '</td>'
+      + '<td>' + this.model.escape('text').replace(/\n/g, '<br>') + '</td>'
     );
     return this;
   },
