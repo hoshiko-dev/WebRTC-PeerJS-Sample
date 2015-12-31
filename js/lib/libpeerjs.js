@@ -9,23 +9,10 @@ var yourStream = null;
 //
 // Camere/MicroPhone Setup
 //
-librtc.initYourCamera = function(width,height,maxRate,minRate,callbacks) {
+librtc.initYourCamera = function(width,height,maxRate,minRate,cameraId,callbacks) {
   if (navigator.getUserMedia) {
     // デバイスを取得
-    navigator.getUserMedia({
-      audio: true,
-      video: {
-          mandatory: {
-              minWidth: width ,
-              minHeight: height ,
-              maxFrameRate: maxRate,
-              minFrameRate: minRate
-          },
-          optional: [{
-              minFrameRate: minRate
-          }]
-      }
-    }, function (stream) {
+    navigator.getUserMedia(librtc.setupUserMediaSetting(width,height,maxRate,minRate,cameraId), function (stream) {
       librtc.debugLog("create Your Camera");
       yourStream = stream;
       if (callbacks['init']) {
@@ -33,6 +20,7 @@ librtc.initYourCamera = function(width,height,maxRate,minRate,callbacks) {
         func(stream);
       }
     }, function (err) {
+      console.log(err);
       // PCのデバイス状況によりエラーになるケースがあるので、リトライ等実装したほうがよい
       // 1)width/heightの値がデバイスの許容を超えるケース(サイズを調整してリトライ)
       // 2)デバイスは正常だがPC側の問題でタイミングが早すぎるケース(時間をおいてリトライ)
@@ -42,6 +30,45 @@ librtc.initYourCamera = function(width,height,maxRate,minRate,callbacks) {
     // ブラウザ非対応
     alert('API：getUserMedia Not Found');
   }
+}
+
+//
+// getUserMediaのパラメータ設定
+//
+librtc.setupUserMediaSetting = function(width,height,maxRate,minRate,cameraId) {
+  let params = {audio: true,
+                video: {
+                    mandatory: {
+                        // width: 0,   // Chrome not support
+                        // hight: 0,   // Chrome not support
+                        minWidth: width ,
+                        minHeight: height ,
+                        maxWidth: width ,
+                        maxHeight: height ,
+                        // echoCancellation: true,  // Chrome not support
+                        googEchoCancellation: true,
+                        googEchoCancellation2: true,
+                        googDAEchoCancellation: true,
+                        googAutoGainControl: true,
+                        googAutoGainControl2: true,
+                        googNoiseSuppression: true,
+                        googNoiseSuppression2: true,
+                        googHighpassFilter: true,
+                        // audioDebugRecording: true,  // Chrome not support
+                        googNoiseReduction: true,
+                        maxFrameRate: maxRate,
+                        minFrameRate: minRate
+                    },
+                    optional: [{
+                        minFrameRate: minRate
+                    }]
+                }
+              };
+  if (cameraId !== undefined && cameraId !== '') {
+    params['video']['optional'].push({'sourceId':cameraId});
+  }
+  console.log('getUserMedia params:',params);
+  return params;
 }
 
 //
@@ -81,6 +108,8 @@ librtc.setPeerParams = function(host,port,key,config,debug,path,id) {
 }
 // Peerオブジェクトのイベント登録
 librtc.setPeerEvent = function(callbacks) {
+  // イベントの強制クリア
+  yourPeer.removeAllListeners();
   // Peer接続完了時
   yourPeer.on('open', function (id) {
     librtc.debugLog('Create Your Peer OK ID:' + id);
@@ -142,6 +171,8 @@ librtc.setPeerEvent = function(callbacks) {
 
 // Mediaオブジェクトのイベント登録
 librtc.setMediaEvent = function(targetMedia,callbacks) {
+  // イベントの強制クリア
+  targetMedia.removeAllListeners();
   // 対向PeerのMediaストリームが確立
   targetMedia.on('stream', function (stream) {
     librtc.debugLog('Create Media Stream. Target ID:' + targetMedia.peer);
@@ -170,6 +201,8 @@ librtc.setMediaEvent = function(targetMedia,callbacks) {
 
 // Dataオブジェクトのイベント登録
 librtc.setDataEvent = function(targetData,callbacks) {
+  // イベントの強制クリア
+  targetData.removeAllListeners();
   // Dataオブジェクト生成完了
   targetData.on('open', function () {
     librtc.debugLog('Data Open.' + targetData.peer);
@@ -269,7 +302,7 @@ librtc.getAllPeers = function(callback) {
 librtc.onListAllPeers = function(callback,peers) {
   if (peers && peers.length > 0) {
     for (var i = 0; i < peers.length; i++) {
-      librtc.debugLog("peer ID:",peers[i]);
+      librtc.debugLog("peer ID:"+peers[i]);
     }
     callback(peers);
   }

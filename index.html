@@ -6,13 +6,14 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
     <link rel="stylesheet" href="css/samples.css">
   </head>
   <body>
     <header>
       <div class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
-          <h2>WebRTC-PeerJS-Sample</h2  >
+          <h2><i class="fa fa-star-o mr10"></i>WebRTC-PeerJS-Sample</h2>
         </div>
       </div>
     </header>
@@ -22,8 +23,8 @@
           <div class="col-md-2">
             <div class="nav nav-pills nav-stacked">
               <ul id="side-menu" class="nav nav-pills nav-stacked">
-                <li id="list-your-info"><a href="#" id="a-your-info" data-toggle="pill">User Info</a></li>
-                <li id="list-webrtc" class="active"><a href="#" id="a-webrtc" data-toggle="pill">WebRTC View</a></li>
+                <li id="list-your-info"><a href="#" id="a-your-info" data-toggle="pill"><i class="fa fa-user mr10"></i>User Info</a></li>
+                <li id="list-webrtc" class="active"><a href="#" id="a-webrtc" data-toggle="pill"><i class="fa fa-video-camera mr10"></i>WebRTC View</a></li>
               </ul>
             </div>
           </div>
@@ -31,7 +32,7 @@
             <div class="row">
               <div class="col-md-12">
                 <div id="user-form" style="display:none;">
-                  <legend>User Info</legend>
+                  <legend class="bg-info"><i class="fa fa-user ml5 mr5 label-fa"></i>User Info</legend>
                   <div id="error" class="bg-danger"></div>
                   <div class="form-block">
                     <form id="user-form" class="">
@@ -43,13 +44,28 @@
                         <label for="email">email</label>
                         <input type="text" class="form-control" id="email" placeholder="メールアドレス"/>
                       </div>
+                      <div class="form-group" >
+                        <label for="camera">Camera Devices</label>
+                        <select id="camera" class="form-control" name="cameraId">
+                        </select>
+                      </div>
+                      <div class="form-group" >
+                        <label for="videoSize">Video Size</label>
+                        <select id="videoSize" class="form-control" name="videoSize">
+                        </select>
+                      </div>
+                      <div class="form-group" >
+                        <label for="frameRate">Frame Rate</label>
+                        <select id="frameRate" class="form-control" name="frameRate">
+                        </select>
+                      </div>
                       <button type="submit" class="btn btn-info" id="user-form-action">Save</a>
                     </form>
                   </div>
                 </div>
                 <div id="rtc-view" style="display:none;">
                   <div class="container-fluid target-list">
-                    <legend>WebRTC VIEW</legend>
+                    <legend class="bg-info"><i class="fa fa-video-camera ml5 mr5 label-fa"></i>WebRTC VIEW</legend>
                     <div class="row">
                       <div class="col-md-12">
                         <div id="video-thumbnails" class="row">
@@ -60,7 +76,7 @@
                 </div>
                 <div id="rtc-text-chat-area" style="display:none;">
                   <div class="container-fluid target-list">
-                    <legend>Chat</legend>
+                    <legend class="bg-info"><i class="fa fa-wechat ml5 mr5 label-fa"></i>Chat</legend>
                     <div class="row">
                       <div class="col-md-12">
                         <textarea id="text-chat" class="form-control" rows="3"></textarea><br>
@@ -72,9 +88,9 @@
                         <div id="chat-block-wrap">
                           <table id="text-chat-table" class="table  table-striped table-condensed">
                             <tr>
-                              <th>Date</th>
-                              <th>Name</th>
-                              <th>Message</th>
+                              <th class="text-cneter">Date</th>
+                              <th class="text-cneter">Name</th>
+                              <th class="text-cneter">Message</th>
                             </tr>
                           </table>
                         </div>
@@ -82,17 +98,17 @@
                     </div>
                   </div>
                 </div>
-                <div id="all-user-list" style="display:none;">
+                <div id="all-user-list" class="mt20" style="display:none;">
                   <div class="container-fluid target-list">
-                    <legend>User List</legend>
+                    <legend class="bg-info"><i class="fa fa-users ml5 mr5 label-fa"></i>User List</legend>
                     <a href="#" class="btn btn-info" id="get-all-peers">Get Peer</a>
                     <table id="users-table" class="table table-bordered table-hover table-striped">
                       <tr>
-                        <th>Name</th>
-                        <th>peer id</th>
-                        <th>email</th>
-                        <th>status</th>
-                        <th>action</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">peer id</th>
+                        <th class="text-center">email</th>
+                        <th class="text-center">status</th>
+                        <th class="text-center">action</th>
                       </tr>
                     </table>
                   </div>
@@ -108,14 +124,24 @@
       <div class="modal-dialog  modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">閉じる</span></button>
+            <button type="button" class="close modal-video-hide" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">close</span></button>
             <h3 class="modal-title" id="modal-video-title"></h3>
           </div>
           <div class="modal-body">
-            <video id="modal-video-view" autoplay class="video-size-modal" ></video>
+            <video id="modal-video-view" autoplay controls class="video-size-modal" ></video>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+            <div class="row">
+              <div class="col-sm-2">
+                <button class="btn btn-default btn-block modal-video-fullscreen"><i class="fa fa-expand"></i></button>
+              </div>
+              <div class="col-sm-2">
+                <button class="btn btn-info btn-block modal-video-mute"><i class="fa fa-microphone"></i></button>
+              </div>
+              <div class="col-sm-offset-6 col-sm-2">
+                <button type="button" class="btn btn-default modal-video-hide" data-dismiss="modal">close</button>
+              </div>
+            </div>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
@@ -126,10 +152,14 @@
     <script src="js/lib/backbone.js"></script>
     <script src="js/lib/peer.js"></script>
     <script src="js/lib/libpeerjs.js"></script>
+    <script src="js/lib/libMediaStream.js"></script>
     <script src="js/rtc-user.js"></script>
+    <script src="js/rtc-adapter.js"></script>
+    <script src="js/rtc-tracker.js"></script>
     <script src="js/rtc-textchat.js"></script>
     <script src="js/rtc-video.js"></script>
     <script src="js/rtc-list.js"></script>
+    <script src="js/rtc-router.js"></script>
     <script src="js/rtc-sample.js"></script>
   </body>
 </html>
