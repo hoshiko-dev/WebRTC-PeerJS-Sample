@@ -24,7 +24,8 @@
             <div class="nav nav-pills nav-stacked">
               <ul id="side-menu" class="nav nav-pills nav-stacked">
                 <li id="list-your-info"><a href="#" id="a-your-info" data-toggle="pill"><i class="fa fa-user mr10"></i>User Info</a></li>
-                <li id="list-webrtc" class="active"><a href="#" id="a-webrtc" data-toggle="pill"><i class="fa fa-video-camera mr10"></i>WebRTC View</a></li>
+                <li id="list-webrtc"><a href="#" id="a-webrtc" data-toggle="pill"><i class="fa fa-video-camera mr10"></i>WebRTC View</a></li>
+                <li id="list-camera-test"><a href="#" id="a-camera-test" data-toggle="pill"><i class="fa fa-camera mr10"></i>Camera Test</a></li>
               </ul>
             </div>
           </div>
@@ -35,7 +36,7 @@
                   <legend class="bg-info"><i class="fa fa-user ml5 mr5 label-fa"></i>User Info</legend>
                   <div id="error" class="bg-danger"></div>
                   <div class="form-block">
-                    <form id="user-form" class="">
+                    <form  class="">
                       <div class="form-group" >
                          <label for="user-name">User Name</label>
                         <input type="text" class="form-control" id="user-name" placeholder="名前"/>
@@ -113,6 +114,24 @@
                     </table>
                   </div>
                 </div>
+                <div id="camera-list" style="display:none;">
+                  <legend class="bg-info"><i class="fa fa-camera ml5 mr5 label-fa"></i>Camera Test Result</legend>
+                  <div class="row">
+                    <h4 id="now-camera-id" class="text-center"></h4>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-offset-3 col-sm-5">
+                      <table id="camera-test-result-table" class="table table-condensed table-hover">
+                        <tr class="header success">
+                          <th class="text-center" style="width: 10px;">Select</th>
+                          <th class="text-center">Size</th>
+                          <th class="text-center">Test</th>
+                        </tr>
+                      </table>
+                      <a href="#" id="camera-test-result-select" class="btn btn-block btn-info" >Save</a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -153,6 +172,7 @@
     <script src="js/lib/peer.js"></script>
     <script src="js/lib/libpeerjs.js"></script>
     <script src="js/lib/libMediaStream.js"></script>
+    <script src="js/lib/libCamera.js"></script>
     <script src="js/rtc-user.js"></script>
     <script src="js/rtc-adapter.js"></script>
     <script src="js/rtc-tracker.js"></script>
@@ -160,6 +180,7 @@
     <script src="js/rtc-video.js"></script>
     <script src="js/rtc-list.js"></script>
     <script src="js/rtc-router.js"></script>
+    <script src="js/rtc-camera.js"></script>
     <script src="js/rtc-sample.js"></script>
   </body>
 </html>
