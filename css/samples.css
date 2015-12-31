@@ -1,0 +1,39 @@
+.pt0 {padding-top: 0 !important;}
+.pb0 {padding-bottom: 0 !important;}
+.mt0 {margin-top: 0 !important;}
+.mt10 {margin-top: 10px;}
+.mt20 {margin-top: 20px;}
+.mb0 {margin-bottom: 0 !important;}
+.mr0 {margin-right: 0 !important;}
+.mr5 {margin-right: 5px;}
+.mr10 {margin-right: 5px;}
+.ml0 {margin-left: 0 !important;}
+.ml5 {margin-left: 5px;}
+.ml10 {margin-left: 5px;}
+
+.video-size-minimal {
+  width: 100%;
+  /*width: 212px;
+  height: 114px;*/
+  padding-left: 9px;
+  padding-right: 9px;
+}
+.video-size-modal {
+  width: 100%;
+}
+
+.label-fa {
+  color: #337ab7;
+}
+
+/* Chat*/
+table#text-chat-table tr td.chat-date {
+  width: 200px;
+}
+table#text-chat-table tr td.chat-name {
+  width: 200px;
+}
+#chat-block-wrap {
+  height: 110px;
+  overflow-y: scroll;
+}
