@@ -11,11 +11,32 @@ var CameraResultView = Backbone.View.extend({
     this.render();
   },
   events: {
-    'click #camera-test-result-select': 'submit'
+    'click #camera-test-result-select': 'submit',
+    'click #camera-test-render-test': 'testView'
   },
   submit: function(e) {
     e.preventDefault();
     this.you.set('size_id',$('input[name="camera-select"]:checked').val())
+  },
+  testView: function(e) {
+    e.preventDefault();
+    $('#camera-test-render-area').children().remove();
+    let param = {};
+
+    if ($('input[name="camera-select"]:checked').val()) {
+      param = this.getTestTargetParams($('input[name="camera-select"]:checked').val());
+      this.tracker.getCameraTestResults(param,this.testRender.bind(this));
+    }
+  },
+  getTestTargetParams: function(id) {
+    let outParams = {};
+    _.each(this.config.get('video_sizes'),function(size) {
+      if (size.id == id) {
+        outParams = size;
+        return false;
+      }
+    });
+    return outParams;
   },
   getTestData: function() {
     // configからテストデータ抽出
@@ -47,6 +68,14 @@ var CameraResultView = Backbone.View.extend({
     }
     if (!_.isEmpty(this.you.get('camera_id'))) {
       $('#now-camera-id').text('Camera Id:' + this.you.get('camera_id'));
+    }
+  },
+  testRender: function(params) {
+    console.log('video test:',params);
+    if (!_.isEmpty(params) && params['result'] === true) {
+      $('#camera-test-render-area').append('<video src=' + URL.createObjectURL(params['stream']) + ' autoplay muted></video>');
+    } else {
+      alert('Camera Device not found');
     }
   },
   render: function() {

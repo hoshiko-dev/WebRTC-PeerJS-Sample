@@ -16,9 +16,12 @@ libCamera.getCameraTestResults = function(param,callback) {
     audio:false,
     video: {
       mandatory: {
-        'minWidth': param['width'],
+        //'minWidth': param['width'],
         'maxWidth': param['width'],
-        //'minHeight': param['height'],
+        'minHeight': param['height'],
+        'maxHeight': param['height'],
+        'maxFrameRate': 30,
+        'minFrameRate': 1
       },
       optional: [{
           minFrameRate: 1
@@ -30,6 +33,7 @@ libCamera.getCameraTestResults = function(param,callback) {
   }
   navigator.getUserMedia(params, function (stream) {
     param['result'] = true;
+    param['stream'] = stream;
     console.log('camera ok!',param);
     callback(param);
   }, function (err) {

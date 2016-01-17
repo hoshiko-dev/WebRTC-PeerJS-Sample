@@ -130,5 +130,8 @@ var Tracker = Backbone.Model.extend({
   },
   getCameraTestResults: function(param,callback) {
     WebRtcAdapter.getCamera().getCameraTestResults(param,callback);
+  },
+  testCameraRender: function(param,callback) {
+    WebRtcAdapter.getCamera().getCameraTestResults(param,callback);
   }
 });
