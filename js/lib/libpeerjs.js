@@ -14,7 +14,7 @@ librtc.initYourCamera = function(width,height,maxRate,minRate,cameraId,callbacks
     // デバイスを取得
     navigator.getUserMedia(librtc.setupUserMediaSetting(width,height,maxRate,minRate,cameraId), function (stream) {
       librtc.debugLog("create Your Camera");
-      yourStream = stream;
+      //yourStream = stream;
       if (callbacks['init']) {
         var func = callbacks['init'];
         func(stream);
@@ -107,7 +107,7 @@ librtc.setPeerParams = function(host,port,key,config,debug,path,id) {
   return params;
 }
 // Peerオブジェクトのイベント登録
-librtc.setPeerEvent = function(callbacks) {
+librtc.setPeerEvent = function(callbacks,myStream) {
   // イベントの強制クリア
   yourPeer.removeAllListeners();
   // Peer接続完了時
@@ -121,8 +121,9 @@ librtc.setPeerEvent = function(callbacks) {
   // [Media]Offer受信時の処理
   yourPeer.on('call', function (media) {
     librtc.debugLog('Media Offer Reciver ID:' + media.peer);
+    console.log(media.metadata);
     // Answer送信
-    media.answer(yourStream);
+    media.answer(myStream);
     //librtc.setMediaEvent(media);
     if (callbacks['call']) {
       var func = callbacks['call'];
@@ -241,9 +242,9 @@ librtc.setDataEvent = function(targetData,callbacks) {
 
 
 // Mediaコネクション確立(ビデオチャット開始)
-librtc.createRtcMedia = function(targetId) {
+librtc.createRtcMedia = function(targetId,myStream,options) {
   librtc.debugLog('create Media. Target ID:' + targetId);
-  return yourPeer.call(targetId, yourStream);
+  return yourPeer.call(targetId, myStream,options);
 }
 
 // Dataコネクション確立(データ通信用セッション)

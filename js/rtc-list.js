@@ -28,7 +28,7 @@ var UserPeerListView = Backbone.View.extend({
         return (user.get('peer_id') == peerId);
       });
       if (_.isEmpty(targetUser)) {
-        targetUser = new User({'peer_id': peerId,'tracker': this.model.tracker});
+        targetUser = new User({'peer_id': peerId,'tracker': this.model.tracker,'capture': this.model.capture});
         console.log('user list new User:',targetUser);
         this.collection.add(targetUser);
         this.model.tracker.addRtcEvent(targetUser);
@@ -62,7 +62,7 @@ var UserPeerListView = Backbone.View.extend({
       var newRecord = new UserRecordView({model: {'user': user,'tracker': this.model.tracker}});
       this.$el.find('#users-table').append(newRecord.render().el);
     },this);
-    $('#all-user-list').show();
+    $('#web-rtc-view').show();
     return this;
   }
 });
@@ -75,6 +75,7 @@ var UserRecordView = Backbone.View.extend({
     this.listenTo(this.model.user,'change',this.render);
     this.listenTo(this.model.user,'remove_video',this.render);
     this.listenTo(this.model.user,'destroy',this.onDestroy);
+    this.listenTo(this.model.user,'screen_state_change',this.onScreenIcon);
   },
   events: {
     'click .peerConnect': 'connectPeer',
@@ -96,6 +97,7 @@ var UserRecordView = Backbone.View.extend({
       + '<td class="text-center">' +
         (isActive?'CONNECTED':'DISCONNECTED')
       + '</td>'
+      + '<td class="text-center" clas="capture-icon-' + this.model.user.get('peer_id') + '"><i class="fa fa-desktop ml5 mr5 label-fa hide"></i></td>'
       + '<td class="text-center">' +
       (this.model.user.get('is_owner')?"":
         (isActive
@@ -123,5 +125,14 @@ var UserRecordView = Backbone.View.extend({
   disconnectPeer: function(e) {
     e.preventDefault();
     this.model.tracker.disconnectPeer(this.model.user);
+  },
+  onScreenIcon: function(isOpen) {
+    if ($('.capture-icon-' + this.model.user.get('peer_id')).length > 0) {
+      if (isOpen) {
+        $('.capture-icon-' + this.model.user.get('peer_id') + ' i').removeClass('hide');
+      } else {
+        $('.capture-icon-' + this.model.user.get('peer_id') + ' i').addClass('hide');
+      }
+    }
   }
 });

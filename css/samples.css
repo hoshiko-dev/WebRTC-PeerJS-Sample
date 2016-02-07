@@ -11,6 +11,13 @@
 .ml5 {margin-left: 5px;}
 .ml10 {margin-left: 5px;}
 
+.block-width70per {width:70%;}
+.block-width75per {width:75%;}
+.block-width80per {width:80%;}
+.block-width85per {width:85%;}
+.block-width90per {width:90%;}
+.block-width95per {width:95%;}
+
 .video-size-minimal {
   width: 100%;
   /*width: 212px;

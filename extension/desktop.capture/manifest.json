@@ -1,0 +1,14 @@
+{
+  "background": {
+      "scripts": ["background.js"],
+      "persistent": false
+  },
+  "name": "Desktop Capture OnOff Sample",
+  "description": "Show desktop media picker UI",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "permissions": ["management","tabs","desktopCapture", "http://*/", "https://*/"],
+  "externally_connectable": {
+      "matches": [ "*://XXX.XXX.XXX.XXX/*" ]
+   }
+}

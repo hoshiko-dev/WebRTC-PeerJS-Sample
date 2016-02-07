@@ -71,7 +71,7 @@ var CameraResultView = Backbone.View.extend({
     }
   },
   testRender: function(params) {
-    console.log('video test:',params);
+    // console.log('video test:',params);
     if (!_.isEmpty(params) && params['result'] === true) {
       $('#camera-test-render-area').append('<video src=' + URL.createObjectURL(params['stream']) + ' autoplay muted></video>');
     } else {
@@ -79,7 +79,7 @@ var CameraResultView = Backbone.View.extend({
     }
   },
   render: function() {
-    $('#user-form,#rtc-view,#all-user-list,#rtc-text-chat-area').hide();
+    $('#user-form,#web-rtc-view').hide();
     this.$el.find('#camera-test-result-table tbody tr.test-result').remove();
     $('#camera-list').show();
 

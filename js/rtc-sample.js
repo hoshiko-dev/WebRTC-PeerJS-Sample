@@ -74,6 +74,10 @@ var debug = true;
 
       // 共通:モーダルウインドリソース
       this.modal = new ModalVideoView({'config': this.config});
+      // 共通: デスクトップキャプチャリソース
+      this.captureModal = new DesktopCapture({'user': this.you,'tracker': this.tracker,'config': this.config});
+      this.you.setCaptureModel(this.captureModal);
+      this.tracker.setCaptureModel(this.captureModal);
 
       this.renderInitView();
     },
@@ -109,7 +113,7 @@ var debug = true;
         this.rtcVideoView.render();
       }
       if (_.isEmpty(this.rtcUserList )) {
-        this.rtcUserList = new UserPeerListView({'collection': this.collection,'model': {'tracker': this.tracker}});
+        this.rtcUserList = new UserPeerListView({'collection': this.collection,'model': {'tracker': this.tracker,'capture': this.captureModal}});
       } else {
         this.rtcUserList.render();
       }
@@ -117,6 +121,16 @@ var debug = true;
         this.rtcTextChatView = new RtcTextChatView({'collection': this.collection,'model': {'you': this.you,'tracker': this.tracker}});
       } else {
         this.rtcTextChatView.render();
+      }
+
+      if (_.isEmpty(this.rtcDesktopCaptureView )) {
+        this.rtcDesktopCaptureView = new DesktopCaptureView({'model': this.captureModal});
+      } else {
+        this.rtcDesktopCaptureView.render();
+      }
+      // デスクトップキャプチャモーダル表示
+      if (_.isEmpty(this.rtcDesktopCaptureModal )) {
+        this.rtcDesktopCaptureModal = new DesktopCaptureModalView({'model': this.captureModal});
       }
 
       // あなたをコレクションに追加

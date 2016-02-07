@@ -34,7 +34,7 @@ var RtcVideoListView = Backbone.View.extend({
   },
   render: function(){
     $('#user-form,#camera-list').hide();
-    $('#rtc-view').show();
+    $('#web-rtc-view').show();
   }
 });
 

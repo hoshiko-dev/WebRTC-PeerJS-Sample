@@ -53,7 +53,7 @@ var WebRtcAdapter = Backbone.Model.extend({
     }
     yieldObj.next();
   },
-  createYourPeer: function(yieldObj) {
+  createYourPeer: function(yieldObj,myStream) {
     console.log('createYourPeer');
     // PeerJSの接続開始
     this.getLibRtc().createYourPeer(
@@ -74,36 +74,29 @@ var WebRtcAdapter = Backbone.Model.extend({
       'disconnected': this.onDisconnected.bind(this),
       'error': this.onPeerError.bind(this),
     };
-    this.getLibRtc().setPeerEvent(callbacks);
+    this.getLibRtc().setPeerEvent(callbacks,myStream);
   },
-  createMedia: function(targetUser,yeildObj) {
-    console.log('createMedia',yeildObj);
+  createMedia: function(targetUser,myStream,callbacks,options,mediaType) {
+    console.log('createMedia');
     // ビデオチャット開始（You->other)
-    var targetMedia = this.getLibRtc().createRtcMedia(targetUser.get('peer_id'));
+    let targetMedia = this.getLibRtc().createRtcMedia(targetUser.get('peer_id'),myStream,options);
     if (targetMedia) {
-      targetUser.set('rtc_media',targetMedia);
-      var callbacks = {
-        'stream': targetUser.onYourStream.bind(targetUser,yeildObj),
-        'close': targetUser.onMediaClose.bind(targetUser),
-        'error': targetUser.onMediaError.bind(targetUser),
-      };
+      targetUser.setMedia(targetMedia,mediaType);
       this.getLibRtc().setMediaEvent(targetMedia,callbacks);
     }
   },
-  closeMedia: function(targetUser) {
-    // ビデオチャット切断
-    this.getLibRtc().closeMedia(targetUser.get('rtc_media'));
+  closeMedia: function(targetMedia) {
+    if (!_.isEmpty(targetMedia)) {
+      // ビデオチャット切断
+      this.getLibRtc().closeMedia(targetMedia);
+    }
+
   },
-  setMediaEvent: function(targetUser) {
-    if (!_.isEmpty(targetUser.get('rtc_media'))) {
-      console.log('setMediaEvent:',targetUser);
+  setMediaEvent: function(targetMedia,callbacks) {
+    if (!_.isEmpty(targetMedia)) {
+      console.log('setMediaEvent:',targetMedia);
       // ビデオチャットイベントセット(Other->Youの場合)
-      var callbacks = {
-        'stream': targetUser.onStream.bind(targetUser),
-        'close': targetUser.onMediaClose.bind(targetUser),
-        'error': targetUser.onMediaError.bind(targetUser),
-      };
-      this.getLibRtc().setMediaEvent(targetUser.get('rtc_media'),callbacks);
+      this.getLibRtc().setMediaEvent(targetMedia,callbacks);
     }
   },
   createData: function(targetUser,yeildObj) {
@@ -122,20 +115,17 @@ var WebRtcAdapter = Backbone.Model.extend({
       }
     }
   },
-  closeData: function(targetUser) {
-    this.getLibRtc().closeData(targetUser.get('rtc_data'));
+  closeData: function(targetData) {
+    if (!_.isEmpty(targetData)) {
+      // ビデオチャット切断
+      this.getLibRtc().closeData(targetData);
+    }
   },
-  setDataEvent: function(targetUser) {
-    if (!_.isEmpty(targetUser.get('rtc_data'))) {
-      console.log('setDataEvent:',targetUser);
+  setDataEvent: function(targetData,callbacks) {
+    if (!_.isEmpty(targetData)) {
+      console.log('setDataEvent:',targetData);
       // データ送信イベントセット(Other->Youの場合)
-      var callbacks = {
-        'data': targetUser.onDataRecieve.bind(targetUser),
-        'open': targetUser.onDataOpen.bind(targetUser),
-        'close': targetUser.onDataClose.bind(targetUser),
-        'error': targetUser.onDataError.bind(targetUser),
-      };
-      this.getLibRtc().setDataEvent(targetUser.get('rtc_data'),callbacks);
+      this.getLibRtc().setDataEvent(targetData,callbacks);
     }
   },
 
@@ -157,7 +147,6 @@ var WebRtcAdapter = Backbone.Model.extend({
     // 対向からのビデオチャット受信(Yourモデルで動作)
     if (media) {
       console.log('onCall');
-      //this.you.trigger('recieve_call',media);
       this.tracker.onRecieveCall(media);
     }
   },
@@ -165,7 +154,6 @@ var WebRtcAdapter = Backbone.Model.extend({
     // 対向からのデータ通信受信(other->you)
     console.log('onConnection');
     if (data) {
-      //this.you.trigger('recieve_data',data);
       this.tracker.onRecieveData(data);
     }
   },
@@ -210,8 +198,30 @@ var WebRtcAdapter = Backbone.Model.extend({
     }
     console.log('setUp VideoSize/FrameRate:',this.width,this.height,this.maxFrame,this.minFrame);
   },
+  startDesktopCapture: function(extId,params,yieldObj) {
+    var callbacks = {
+      'init': this.onYourScreen.bind(this,yieldObj)
+    };
+    this.getLibCapture().startDesktopCapture(extId,params,callbacks);
+  },
+  onYourScreen: function(yieldObj,screenStream) {
+    console.log('onYourScreen');
+    // デスクトップキャプチャをvideoタグにセット
+    var src = URL.createObjectURL(screenStream);
+    if (src) {
+      this.you.set('screen_stream',screenStream);
+      this.you.set('screen_src',src);
+    }
+    yieldObj.next();
+  },
+  stopDesktopCapture: function() {
+    this.getLibCapture().stopCapture();
+  },
   getLibRtc: function() {
     return librtc;
+  },
+  getLibCapture: function() {
+    return libCapture;
   }
 },{
   getMediaStream: function() {

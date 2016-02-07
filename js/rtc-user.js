@@ -11,11 +11,14 @@ var User = Backbone.Model.extend({
     minFrameRate: 1,
     cameraId: 0,
     src: '',
+    screen_src: '',
     stream: null,
+    screen_stream: null,
     rtc_media: null,
+    rtc_screen: null,
     rtc_data: null,
-    rtc_video_src: '',
     is_owner: false,
+    is_screen_capture: false,
     camera_devices: [],
     camera_id: null,
     size_id: '1',
@@ -27,6 +30,9 @@ var User = Backbone.Model.extend({
   initialize: function (args) {
     //super
     this.tracker = args.tracker;
+    if (args.capture != undefined) {
+      this.capture = args.capture;
+    }
 
     this.listenTo(this,'invalid',this.onIinvalid);
     // カメラデバイスの取得
@@ -38,6 +44,20 @@ var User = Backbone.Model.extend({
   },
   onIinvalid: function(model,error) {
     console.log('onIinvalid',error);
+  },
+  setCaptureModel: function(capture) {
+    console.log('capture get!',this.get('user_name'));
+    this.capture = capture;
+  },
+  setMedia: function(media,mediaType) {
+    // MediaStreamをセット
+    if (mediaType !== undefined && mediaType === 'screen') {
+      media.metadata = {'type': 'screen'};
+      this.set('rtc_screen',media);
+    } else {
+      media.metadata = {'type': 'video'};
+      this.set('rtc_media',media);
+    }
   },
   setVideDevice: function(deviceInfo) {
     if (deviceInfo !== null) {
@@ -132,6 +152,37 @@ var User = Backbone.Model.extend({
       }
     }
   },
+  onScreenStream: function(stream) {
+    console.log('onScreenStream',stream);
+    // 対向ノードからのデスクトップキャプチャ接続完了通知を受信
+    var src = URL.createObjectURL(stream);
+    if (src) {
+      this.set('screen_stream',stream);
+      this.set('screen_src',src);
+      // リストにデスクトップキャプチャアイコンを表示
+      this.trigger('screen_state_change',true);
+      if (!this.is_owner) {
+        if (!_.isEmpty(this.capture)) {
+          // デスクトップmodal表示
+          this.capture.trigger('open_capture_modal',this.get('user_name'),src);
+        } else {
+          alert('capture not found');
+        }
+
+      }
+    }
+  },
+  onScreenClose: function() {
+    console.log('onScreenClose');
+    // デスクトップキャプチャ切断
+    this.set({'rtc_screen': null}, {silent: true});
+    this.set({'screen_stream': null}, {silent: true});
+    this.set({'screen_src': ''}, {silent: true});
+    // リストにデスクトップキャプチャアイコンを表示
+    this.trigger('screen_state_change',false);
+    // modalクローズ
+    this.capture.trigger('close_modal',this);
+  },
   nextYield: function(obj) {
     try {
       obj.next()
@@ -183,7 +234,7 @@ var UserInfoView = Backbone.View.extend({
   },
   render: function() {
     $('#user-form').show();
-    $('#camera-list,#rtc-view,#all-user-list,#rtc-text-chat-area').hide();
+    $('#camera-list,#web-rtc-view').hide();
 
     $('#user-name').val(this.model.get('user_name'));
     $('#email').val(this.model.get('email'));

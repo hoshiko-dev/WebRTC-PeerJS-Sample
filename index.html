@@ -64,54 +64,72 @@
                     </form>
                   </div>
                 </div>
-                <div id="rtc-view" style="display:none;">
-                  <div class="container-fluid target-list">
-                    <legend class="bg-info"><i class="fa fa-video-camera ml5 mr5 label-fa"></i>WebRTC VIEW</legend>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <div id="video-thumbnails" class="row">
+                <div id="web-rtc-view" style="display:none;">
+                  <div id="rtc-view">
+                    <div class="container-fluid target-list">
+                      <legend class="bg-info"><i class="fa fa-video-camera ml5 mr5 label-fa"></i>WebRTC VIEW</legend>
+                      <div class="row">
+                        <div class="col-md-12">
+                          <div id="video-thumbnails" class="row">
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div id="rtc-text-chat-area" style="display:none;">
-                  <div class="container-fluid target-list">
-                    <legend class="bg-info"><i class="fa fa-wechat ml5 mr5 label-fa"></i>Chat</legend>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <textarea id="text-chat" class="form-control" rows="3"></textarea><br>
-                        <a href="#" id="post-text-chat" class="btn btn-info">Post</a>
+                  <div id="rtc-text-chat-area">
+                    <div class="container-fluid target-list">
+                      <legend class="bg-info"><i class="fa fa-wechat ml5 mr5 label-fa"></i>Chat</legend>
+                      <div class="row">
+                        <div class="col-md-12">
+                          <textarea id="text-chat" class="form-control" rows="3"></textarea><br>
+                          <a href="#" id="post-text-chat" class="btn btn-info">Post</a>
+                        </div>
                       </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-12">
-                        <div id="chat-block-wrap">
-                          <table id="text-chat-table" class="table  table-striped table-condensed">
-                            <tr>
-                              <th class="text-cneter">Date</th>
-                              <th class="text-cneter">Name</th>
-                              <th class="text-cneter">Message</th>
-                            </tr>
-                          </table>
+                      <div class="row">
+                        <div class="col-md-12">
+                          <div id="chat-block-wrap">
+                            <table id="text-chat-table" class="table  table-striped table-condensed">
+                              <tr>
+                                <th class="text-cneter">Date</th>
+                                <th class="text-cneter">Name</th>
+                                <th class="text-cneter">Message</th>
+                              </tr>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div id="all-user-list" class="mt20" style="display:none;">
-                  <div class="container-fluid target-list">
-                    <legend class="bg-info"><i class="fa fa-users ml5 mr5 label-fa"></i>User List</legend>
-                    <a href="#" class="btn btn-info" id="get-all-peers">Get Peer</a>
-                    <table id="users-table" class="table table-bordered table-hover table-striped">
-                      <tr>
-                        <th class="text-center">Name</th>
-                        <th class="text-center">peer id</th>
-                        <th class="text-center">email</th>
-                        <th class="text-center">status</th>
-                        <th class="text-center">action</th>
-                      </tr>
-                    </table>
+                  <div id="all-user-list" class="mt20">
+                    <div class="container-fluid target-list">
+                      <legend class="bg-info"><i class="fa fa-users ml5 mr5 label-fa"></i>User List</legend>
+                      <a href="#" class="btn btn-info" id="get-all-peers">Get Peer</a>
+                      <table id="users-table" class="table table-bordered table-hover table-striped">
+                        <tr>
+                          <th class="text-center">Name</th>
+                          <th class="text-center">peer id</th>
+                          <th class="text-center">email</th>
+                          <th class="text-center">status</th>
+                          <th class="text-center">capture</th>
+                          <th class="text-center">action</th>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                  <div id="desktop-capture-edit" class="mt20">
+                    <div class="container-fluid target-list">
+                      <legend class="bg-info"><i class="fa fa-desktop ml5 mr5 label-fa"></i>Desktop Capture</legend>
+                      <form-group>
+                        <label for="desktop-capture-extension-id">Chrome Desktop Caputre ExtensionId</label>
+                        <input type="text" class="form-control" id="desktop-capture-extension-id" value="jbbidgonenlckjemfkppdbkecfpmdkdd" />
+                      </form-group>
+                      <div class="form-group" >
+                        <label for="select-desktop-size">Desktop Size</label>
+                        <select id="select-desktop-size" class="form-control" name="desktop_size">
+                        </select>
+                      </div>
+                      <a href="#" class="btn btn-info" id="get-desktop-capture">Start Capture</a>
+                    </div>
                   </div>
                 </div>
                 <div id="camera-list" style="display:none;">
@@ -173,6 +191,30 @@
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+    <!-- モーダルの設定 -->
+    <div class="modal fade" id="desktop-capture-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog block-width80per">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close modal-desktop-capture-hide" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">close</span></button>
+            <h3 class="modal-title" ><i class="fa fa-desktop ml5 mr5 label-fa"></i><strong id="modal-desktop-name"></strong></h3>
+          </div>
+          <div class="modal-body">
+            <video id="modal-desktop-view" autoplay controls class="video-size-modal" ></video>
+          </div>
+          <div class="modal-footer">
+            <div class="row">
+              <div class="col-sm-2">
+                <button class="btn btn-default btn-block modal-desktop-fullscreen"><i class="fa fa-expand"></i></button>
+              </div>
+              <div class="col-sm-offset-6 col-sm-2">
+                <button type="button" class="btn btn-default modal-desktop-capture-hide" data-dismiss="modal">close</button>
+              </div>
+            </div>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
     <script src="js/lib/underscore.js"></script>
     <script src="js/lib/jquery-2.1.4.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
@@ -181,11 +223,13 @@
     <script src="js/lib/libpeerjs.js"></script>
     <script src="js/lib/libMediaStream.js"></script>
     <script src="js/lib/libCamera.js"></script>
-    <script src="js/rtc-user.js"></script>
+    <script src="js/lib/libCapture.js"></script>
     <script src="js/rtc-adapter.js"></script>
+    <script src="js/rtc-user.js"></script>
     <script src="js/rtc-tracker.js"></script>
     <script src="js/rtc-textchat.js"></script>
     <script src="js/rtc-video.js"></script>
+    <script src="js/rtc-capture.js"></script>
     <script src="js/rtc-list.js"></script>
     <script src="js/rtc-router.js"></script>
     <script src="js/rtc-camera.js"></script>

@@ -13,13 +13,16 @@ var Tracker = Backbone.Model.extend({
   },
   validate: function(attrs) {
   },
+  setCaptureModel: function(capture){
+    this.capture = capture
+  },
   startRtc: function*() {
     // 自身のカメラ接続とPeer接続完了まではWaitさせる。
     console.log('Tracker: startRtc');
     // RTC開始 カメラ接続開始
-    yield this.adapter.startRtc(this.get('yield_obj'))
+    yield this.adapter.startRtc(this.get('yield_obj'));
     // Peer接続完了 接続完了まで待ちたい。
-    yield this.adapter.createYourPeer(this.get('yield_obj'));
+    yield this.adapter.createYourPeer(this.get('yield_obj'),this.you.get('stream'));
     // peerList初回取得
     this.you.trigger('get_start_peer');
     this.you.trigger('add_video_tag',this.you);
@@ -31,9 +34,14 @@ var Tracker = Backbone.Model.extend({
   },
   connectPeer: function*(targetUser) {
     targetUser.set('connectGen',this.connectPeer);
-
+    let mediaCallback = {
+      'stream': targetUser.onYourStream.bind(targetUser,this.get('yield_obj')),
+      'close': targetUser.onMediaClose.bind(targetUser),
+      'error': targetUser.onMediaError.bind(targetUser),
+    };
+    let options = {'metadata': {'type': 'video'}};
     // 対向との接続開始(Video/Data);
-    this.adapter.createMedia(targetUser,this.get('yield_obj'));
+    this.adapter.createMedia(targetUser,this.you.get('stream'),mediaCallback,options,'video');
     this.adapter.createData(targetUser,this.get('yield_obj'));
     yield;
     yield;
@@ -41,8 +49,8 @@ var Tracker = Backbone.Model.extend({
     this.sendProfile(targetUser);
   },
   disconnectPeer: function(targetUser) {
-    this.adapter.closeData(targetUser);
-    this.adapter.closeMedia(targetUser);
+    this.adapter.closeData(targetUser.get('rtc_media'));
+    this.adapter.closeMedia(targetUser.get('rtc_data'));
   },
   sendProfile: function(target) {
     console.log('sendProfile',this.you.get('user_name'));
@@ -63,15 +71,33 @@ var Tracker = Backbone.Model.extend({
     let targetUser = this.collection.find(function(user){
       return (user.get('peer_id') == media.peer);
     });
+    console.log('#####  targetUser search:',targetUser);
     if (!_.isEmpty(targetUser)) {
-      targetUser.set('rtc_media',media);
+      targetUser.setMedia(media,media.metadata.type);
     } else {
       console.log('new User Video tag');
-      targetUser = new User({'peer_id': media.peer,'rtc_media': media,'tracker': this});
+      targetUser = new User({'peer_id': media.peer,'tracker': this, 'capture': this.capture});
+      targetUser.setMedia(media,media.metadata.type);
       this.collection.add(targetUser);
     }
+    let callbacks = {};
+    if (media.metadata.type == 'screen') {
+      // デスクトップキャプチャイベントセット(Other->Youの場合)
+      callbacks = {
+        'stream': targetUser.onScreenStream.bind(targetUser),
+        'close': targetUser.onScreenClose.bind(targetUser),
+        'error': targetUser.onMediaError.bind(targetUser),
+      };
+    } else {
+      // ビデオチャットイベントセット(Other->Youの場合)
+      callbacks = {
+        'stream': targetUser.onStream.bind(targetUser),
+        'close': targetUser.onMediaClose.bind(targetUser),
+        'error': targetUser.onMediaError.bind(targetUser),
+      };
+    }
     // このタイミングで初めてイベントセットするケースがありうる
-    this.adapter.setMediaEvent(targetUser);
+    this.adapter.setMediaEvent(media,callbacks);
   },
   onRecieveData: function(data) {
     // データ通信の接続要求を受信
@@ -87,12 +113,29 @@ var Tracker = Backbone.Model.extend({
       this.collection.add(targetUser);
     }
     // このタイミングで初めてイベントセットするケースがありうる
-    this.adapter.setDataEvent(targetUser);
+    let callbacks = {
+      'data': targetUser.onDataRecieve.bind(targetUser),
+      'open': targetUser.onDataOpen.bind(targetUser),
+      'close': targetUser.onDataClose.bind(targetUser),
+      'error': targetUser.onDataError.bind(targetUser),
+    };
+    this.adapter.setDataEvent(targetUser.get('rtc_data'),callbacks);
   },
   addRtcEvent: function(targetUser) {
     // getAllPeers直後は空振りする可能性あり
-    this.adapter.setMediaEvent(targetUser);
-    this.adapter.setDataEvent(targetUser);
+    let callbacks = {
+      'stream': targetUser.onStream.bind(targetUser),
+      'close': targetUser.onMediaClose.bind(targetUser),
+      'error': targetUser.onMediaError.bind(targetUser),
+    };
+    this.adapter.setMediaEvent(targetUser.get('rtc_media'),callbacks);
+    callbacks = {
+      'data': targetUser.onDataRecieve.bind(targetUser),
+      'open': targetUser.onDataOpen.bind(targetUser),
+      'close': targetUser.onDataClose.bind(targetUser),
+      'error': targetUser.onDataError.bind(targetUser),
+    };
+    this.adapter.setDataEvent(targetUser.get('rtc_data'),callbacks);
   },
   getAllPeers: function(callback) {
     this.adapter.getAllPeers(callback);
@@ -133,5 +176,36 @@ var Tracker = Backbone.Model.extend({
   },
   testCameraRender: function(param,callback) {
     WebRtcAdapter.getCamera().getCameraTestResults(param,callback);
+  },
+  startDesktopCapture: function*(extId,params) {
+    this.you.set('is_screen_capture',true);
+    // デスクトップキャプチャ接続開始
+    yield this.adapter.startDesktopCapture(extId,params,this.get('screen_yield_obj'));
+    // デスクトップキャプチャのMedia送信開始
+    // 対象全員に送信
+    console.log('broadcast Desktop capure!');
+    this.collection.each(function(targetUser) {
+      if (!_.isEmpty(targetUser.get('peer_id')) && targetUser.get('peer_id') !== this.you.get('peer_id')) {
+        let callbacks = {
+          'stream': targetUser.onScreenStream.bind(targetUser),
+          'close': targetUser.onScreenClose.bind(targetUser),
+          'error': targetUser.onMediaError.bind(targetUser),
+        };
+        let options = {'metadata': {'type': 'screen'}};
+        console.log('my screen stream',this.you.get('screen_stream'));
+        this.adapter.createMedia(targetUser,this.you.get('screen_stream'),callbacks,options,'screen');
+      }
+    },this);
+    // modal起動
+    this.capture.trigger('open_capture_modal',this.you.get('user_name'),this.you.get('screen_src'));
+  },
+  stopDesktopCapture: function() {
+    this.you.set('is_screen_capture',false);
+    this.collection.each(function(targetUser) {
+      if (!_.isEmpty(targetUser.get('peer_id')) && targetUser.get('peer_id') !== this.you.get('peer_id')) {
+        this.adapter.closeMedia(targetUser.get('rtc_screen'));
+      }
+    },this);
+    this.adapter.stopDesktopCapture();
   }
 });
