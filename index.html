@@ -27,6 +27,12 @@
                 <li id="list-webrtc"><a href="#" id="a-webrtc" data-toggle="pill"><i class="fa fa-video-camera mr10"></i>WebRTC View</a></li>
                 <li id="list-camera-test"><a href="#" id="a-camera-test" data-toggle="pill"><i class="fa fa-camera mr10"></i>Camera Test</a></li>
               </ul>
+              <div class="text-center" id="desktop-capture-compress-view">
+                <div class="well padding0">
+                  <h5 class="compress-title" ><i class="fa fa-desktop ml5 mr5 label-fa"></i><strong id="compress-desktop-name"></strong></h5>
+                  <video id="desktop-capture-compress-video" src="" style="width: 90%;" data-toggle="tooltip" title="click open modal"></vide>
+                </div>
+              </div>
             </div>
           </div>
           <div class="col-md-10">
@@ -121,7 +127,7 @@
                       <legend class="bg-info"><i class="fa fa-desktop ml5 mr5 label-fa"></i>Desktop Capture</legend>
                       <form-group>
                         <label for="desktop-capture-extension-id">Chrome Desktop Caputre ExtensionId</label>
-                        <input type="text" class="form-control" id="desktop-capture-extension-id" value="jbbidgonenlckjemfkppdbkecfpmdkdd" />
+                        <input type="text" class="form-control" id="desktop-capture-extension-id" value="" />
                       </form-group>
                       <div class="form-group" >
                         <label for="select-desktop-size">Desktop Size</label>
@@ -178,7 +184,7 @@
           <div class="modal-footer">
             <div class="row">
               <div class="col-sm-2">
-                <button class="btn btn-default btn-block modal-video-fullscreen"><i class="fa fa-expand"></i></button>
+                <button class="btn btn-primary btn-block modal-video-fullscreen"><i class="fa fa-expand"></i></button>
               </div>
               <div class="col-sm-2">
                 <button class="btn btn-info btn-block modal-video-mute"><i class="fa fa-microphone"></i></button>
@@ -204,11 +210,14 @@
           </div>
           <div class="modal-footer">
             <div class="row">
-              <div class="col-sm-2">
-                <button class="btn btn-default btn-block modal-desktop-fullscreen"><i class="fa fa-expand"></i></button>
+              <div class="col-sm-4 text-left">
+                <!-- <div class="btn-group btn-group-justified"> -->
+                  <a class="btn btn-primary btn-width-140 modal-desktop-fullscreen"><i class="fa fa-expand"></i></a>
+                  <a class="btn btn-info btn-width-140 modal-desktop-compress"><i class="fa fa-compress"></i></a>
+                <!-- </div> -->
               </div>
               <div class="col-sm-offset-6 col-sm-2">
-                <button type="button" class="btn btn-default modal-desktop-capture-hide" data-dismiss="modal">close</button>
+                <button type="button" class="btn btn-default modal-desktop-capture-close" data-dismiss="modal">close</button>
               </div>
             </div>
           </div>

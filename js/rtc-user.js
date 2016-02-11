@@ -152,6 +152,17 @@ var User = Backbone.Model.extend({
       }
     }
   },
+  onYourScreen: function(yieldObj,screenStream) {
+    console.log('onYourScreen',screenStream);
+    // デスクトップキャプチャをvideoタグにセット
+    var src = URL.createObjectURL(screenStream);
+    if (src) {
+      this.set('screen_stream',screenStream);
+      this.set('screen_src',src);
+      this.trigger('screen_state_change',true);
+    }
+    yieldObj.next();
+  },
   onScreenStream: function(stream) {
     console.log('onScreenStream',stream);
     // 対向ノードからのデスクトップキャプチャ接続完了通知を受信
@@ -161,14 +172,11 @@ var User = Backbone.Model.extend({
       this.set('screen_src',src);
       // リストにデスクトップキャプチャアイコンを表示
       this.trigger('screen_state_change',true);
-      if (!this.is_owner) {
-        if (!_.isEmpty(this.capture)) {
-          // デスクトップmodal表示
-          this.capture.trigger('open_capture_modal',this.get('user_name'),src);
-        } else {
-          alert('capture not found');
-        }
-
+      if (!_.isEmpty(this.capture)) {
+        // デスクトップmodal表示
+        this.capture.trigger('open_capture_modal',this.get('peer_id'),this.get('user_name'),src);
+      } else {
+        alert('capture not found');
       }
     }
   },

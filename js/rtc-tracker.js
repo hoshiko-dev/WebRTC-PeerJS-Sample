@@ -10,6 +10,8 @@ var Tracker = Backbone.Model.extend({
     this.config = args.config;
     this.collection = args.collection;
     this.adapter = new WebRtcAdapter({'you': this.you,'config': this.config,'tracker': this});
+
+    this.listenTo(this,'close_modal',this.onCloseModal);
   },
   validate: function(attrs) {
   },
@@ -179,13 +181,19 @@ var Tracker = Backbone.Model.extend({
   },
   startDesktopCapture: function*(extId,params) {
     this.you.set('is_screen_capture',true);
+    let callbacks = {
+      'init': this.you.onYourScreen.bind(this.you,this.get('screen_yield_obj'))
+    };
     // デスクトップキャプチャ接続開始
-    yield this.adapter.startDesktopCapture(extId,params,this.get('screen_yield_obj'));
+    yield this.adapter.startDesktopCapture(extId,params,callbacks);
     // デスクトップキャプチャのMedia送信開始
     // 対象全員に送信
     console.log('broadcast Desktop capure!');
     this.collection.each(function(targetUser) {
-      if (!_.isEmpty(targetUser.get('peer_id')) && targetUser.get('peer_id') !== this.you.get('peer_id')) {
+        // Videoチャット未接続の場合は対象外
+      if (!_.isEmpty(targetUser.get('peer_id'))
+        && targetUser.get('peer_id') !== this.you.get('peer_id')
+        && targetUser.get('src') !== '') {
         let callbacks = {
           'stream': targetUser.onScreenStream.bind(targetUser),
           'close': targetUser.onScreenClose.bind(targetUser),
@@ -197,15 +205,26 @@ var Tracker = Backbone.Model.extend({
       }
     },this);
     // modal起動
-    this.capture.trigger('open_capture_modal',this.you.get('user_name'),this.you.get('screen_src'));
+    this.capture.trigger('open_capture_modal',this.you.get('peer_id'),this.you.get('user_name'),this.you.get('screen_src'));
   },
   stopDesktopCapture: function() {
     this.you.set('is_screen_capture',false);
+    this.you.trigger('screen_state_change',false);
     this.collection.each(function(targetUser) {
       if (!_.isEmpty(targetUser.get('peer_id')) && targetUser.get('peer_id') !== this.you.get('peer_id')) {
         this.adapter.closeMedia(targetUser.get('rtc_screen'));
       }
     },this);
     this.adapter.stopDesktopCapture();
+  },
+  onCloseModal: function(peerId,isMuted) {
+    // Videoチャットモーダルのクローズイベント
+    console.log('closeModal',peerId,isMuted);
+    let member = this.collection.find(function(member){
+      return peerId === member.get('peer_id');
+    });
+    if (!_.isEmpty(member)) {
+      member.trigger('close_modal',isMuted);
+    }
   }
 });

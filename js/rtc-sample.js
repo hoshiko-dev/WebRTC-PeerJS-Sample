@@ -73,11 +73,13 @@ var debug = true;
       this.you.set('tracker',this.tracker);
 
       // 共通:モーダルウインドリソース
-      this.modal = new ModalVideoView({'config': this.config});
+      this.modal = new ModalVideoView({'config': this.config,'tracker': this.tracker});
       // 共通: デスクトップキャプチャリソース
-      this.captureModal = new DesktopCapture({'user': this.you,'tracker': this.tracker,'config': this.config});
+      this.captureModal = new DesktopCapture({'you': this.you,'tracker': this.tracker,'config': this.config});
       this.you.setCaptureModel(this.captureModal);
       this.tracker.setCaptureModel(this.captureModal);
+      // 共通: デスクトップキャプチャリソース最少化エリア
+      this.captureCompress = new DesktopCaptureCompressView({'model':this.captureModal});
 
       this.renderInitView();
     },

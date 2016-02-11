@@ -198,21 +198,8 @@ var WebRtcAdapter = Backbone.Model.extend({
     }
     console.log('setUp VideoSize/FrameRate:',this.width,this.height,this.maxFrame,this.minFrame);
   },
-  startDesktopCapture: function(extId,params,yieldObj) {
-    var callbacks = {
-      'init': this.onYourScreen.bind(this,yieldObj)
-    };
+  startDesktopCapture: function(extId,params,callbacks) {
     this.getLibCapture().startDesktopCapture(extId,params,callbacks);
-  },
-  onYourScreen: function(yieldObj,screenStream) {
-    console.log('onYourScreen');
-    // デスクトップキャプチャをvideoタグにセット
-    var src = URL.createObjectURL(screenStream);
-    if (src) {
-      this.you.set('screen_stream',screenStream);
-      this.you.set('screen_src',src);
-    }
-    yieldObj.next();
   },
   stopDesktopCapture: function() {
     this.getLibCapture().stopCapture();
